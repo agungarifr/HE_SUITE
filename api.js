@@ -332,9 +332,13 @@ const server = app.listen(PORT, () => {
 
 const wss = new WebSocketServer({ server });
 
+const agentProcesses = {};
+const agentHistories = {};
+const activeWebSockets = new Set();
+
 wss.on('connection', (ws) => {
-  console.log('Client connected to Web Terminal');
-  let currentProcess = null;
+  activeWebSockets.add(ws);
+  ws.attachedAgent = null;
 
   ws.on('message', (msg) => {
     try {
@@ -342,30 +346,48 @@ wss.on('connection', (ws) => {
       
       if (data.type === 'start') {
         const agentId = data.agentId;
-        if (currentProcess) currentProcess.kill();
+        ws.attachedAgent = agentId;
         
-        // Spawn the agent in a shell
-        const cmd = agentId === 'freebuff' ? 'freebuff' : 'agy';
-        currentProcess = spawn(cmd, [], {
-          cwd: __dirname,
-          shell: true,
-          env: { ...process.env, FORCE_COLOR: '1' }
-        });
+        if (!agentHistories[agentId]) agentHistories[agentId] = "";
 
-        currentProcess.stdout.on('data', (d) => {
-          ws.send(JSON.stringify({ type: 'output', data: d.toString() }));
-        });
+        if (agentProcesses[agentId]) {
+          // Reattach to existing process
+          ws.send(JSON.stringify({ type: 'output', data: agentHistories[agentId] }));
+          ws.send(JSON.stringify({ type: 'output', data: `\r\n\x1b[33m[Reattached to running ${agentId} session]\x1b[0m\r\n` }));
+        } else {
+          // Spawn new process
+          const cmd = agentId === 'freebuff' ? 'freebuff' : 'agy';
+          const p = spawn(cmd, [], {
+            cwd: __dirname,
+            shell: true,
+            env: { ...process.env, FORCE_COLOR: '1' }
+          });
+          agentProcesses[agentId] = p;
 
-        currentProcess.stderr.on('data', (d) => {
-          ws.send(JSON.stringify({ type: 'output', data: d.toString() }));
-        });
+          const broadcast = (str) => {
+            agentHistories[agentId] += str;
+            if (agentHistories[agentId].length > 50000) {
+              agentHistories[agentId] = agentHistories[agentId].slice(-50000);
+            }
+            for (const client of activeWebSockets) {
+              if (client.readyState === 1 /* OPEN */ && client.attachedAgent === agentId) {
+                client.send(JSON.stringify({ type: 'output', data: str }));
+              }
+            }
+          };
 
-        currentProcess.on('close', (code) => {
-          ws.send(JSON.stringify({ type: 'output', data: `\r\n\x1b[31m[Process exited with code ${code}]\x1b[0m\r\n` }));
-        });
+          p.stdout.on('data', (d) => broadcast(d.toString()));
+          p.stderr.on('data', (d) => broadcast(d.toString()));
+
+          p.on('close', (code) => {
+            broadcast(`\r\n\x1b[31m[Process exited with code ${code}]\x1b[0m\r\n`);
+            delete agentProcesses[agentId];
+          });
+        }
       } else if (data.type === 'input') {
-        if (currentProcess && currentProcess.stdin) {
-          currentProcess.stdin.write(data.input);
+        const agentId = ws.attachedAgent;
+        if (agentId && agentProcesses[agentId] && agentProcesses[agentId].stdin) {
+          agentProcesses[agentId].stdin.write(data.input);
         }
       }
     } catch (e) {
@@ -374,10 +396,8 @@ wss.on('connection', (ws) => {
   });
 
   ws.on('close', () => {
-    console.log('Client disconnected from Web Terminal');
-    if (currentProcess) {
-      currentProcess.kill();
-    }
+    activeWebSockets.delete(ws);
+    // Process keeps running in the background!
   });
 });
 
