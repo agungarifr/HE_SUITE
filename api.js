@@ -147,10 +147,10 @@ app.delete('/api/stories/:id', async (req, res) => {
 
 // === Agent Integrations ===
 const AGENTS = [
-  { id: 'antigravity', name: 'Antigravity CLI (agy)', command: 'which agy' },
-  { id: 'freebuff', name: 'Freebuff CLI', command: 'which freebuff' },
-  { id: 'cursor', name: 'Cursor Editor', command: 'which cursor' },
-  { id: 'cline', name: 'Cline / Claude Dev', command: 'which cline' }
+  { id: 'antigravity', name: 'Antigravity CLI (agy)', command: 'agy --version' },
+  { id: 'freebuff', name: 'Freebuff CLI', command: 'freebuff --version' },
+  { id: 'cursor', name: 'Cursor Editor', command: 'cursor --version' },
+  { id: 'cline', name: 'Cline / Claude Dev', command: 'code --version' }
 ];
 
 app.get('/api/agents', async (req, res) => {
@@ -280,20 +280,20 @@ app.post('/api/agents/launch', async (req, res) => {
     let success = true;
 
     if (agentId === 'cursor') {
-      await execPromise('cursor .');
+      await execPromise(`cursor "${__dirname}"`);
     } else if (agentId === 'cline') {
-      await execPromise('code .');
+      await execPromise(`code "${__dirname}"`);
     } else if (agentId === 'freebuff') {
       if (os.platform() === 'darwin') {
-        await execPromise(`osascript -e 'tell application "Terminal" to do script "cd ${__dirname} && freebuff"'`);
+        await execPromise(`osascript -e 'tell application "Terminal" to do script "cd \\"${__dirname}\\" && freebuff"'`);
       } else {
-        await execPromise('start cmd /k "freebuff"');
+        await execPromise(`start cmd /k "cd /d \\"${__dirname}\\" && freebuff"`);
       }
     } else if (agentId === 'antigravity') {
       if (os.platform() === 'darwin') {
-        await execPromise(`osascript -e 'tell application "Terminal" to do script "cd ${__dirname} && agy"'`);
+        await execPromise(`osascript -e 'tell application "Terminal" to do script "cd \\"${__dirname}\\" && agy"'`);
       } else {
-        await execPromise('start cmd /k "agy"');
+        await execPromise(`start cmd /k "cd /d \\"${__dirname}\\" && agy"`);
       }
     } else {
       success = false;

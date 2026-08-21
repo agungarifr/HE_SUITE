@@ -564,7 +564,7 @@ function App() {
       
       <p style={{ marginBottom: '2rem', color: 'var(--text-muted)' }}>
         HE_SUITE automatically detects supported CLI coding agents installed on your system. 
-        Click <strong>Connect</strong> to automatically configure them to use the HE_SUITE MCP Server.
+        Click <strong>Configure</strong> to automatically configure them to use the HE_SUITE MCP Server.
       </p>
 
       <div className="stories-grid">
@@ -589,7 +589,7 @@ function App() {
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                   {agent.isConnected ? (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid var(--success)', borderRadius: '8px', padding: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>
-                      <CheckCircle2 size={16} style={{ marginRight: '0.5rem' }} /> Connected
+                      <CheckCircle2 size={16} style={{ marginRight: '0.5rem' }} /> Configured
                     </div>
                   ) : (
                     <button 
@@ -599,7 +599,7 @@ function App() {
                       disabled={connectingAgent === agent.id}
                     >
                       {connectingAgent === agent.id ? <RefreshCw size={16} className="spin" /> : <CheckCircle2 size={16} />} 
-                      {connectingAgent === agent.id ? 'Connecting...' : 'Connect to HE_SUITE'}
+                      {connectingAgent === agent.id ? 'Configuring...' : 'Configure'}
                     </button>
                   )}
                   <button 
