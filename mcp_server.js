@@ -210,6 +210,18 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("HE SUITE MCP Server running on stdio");
+
+  const agentId = process.argv[2] || 'unknown';
+  if (agentId !== 'unknown') {
+    // Send heartbeat ping every 5 seconds
+    setInterval(async () => {
+      try {
+        await fetch(`http://localhost:8888/api/mcp/ping?agent=${agentId}`);
+      } catch (e) {
+        // Silently ignore ping failures (e.g. if API is offline)
+      }
+    }, 5000);
+  }
 }
 
 main().catch((err) => {

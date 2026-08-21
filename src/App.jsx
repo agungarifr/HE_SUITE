@@ -109,6 +109,15 @@ function App() {
     fetchData();
   }, [activeTab]);
 
+  useEffect(() => {
+    if (activeTab === 'integrations') {
+      const interval = setInterval(() => {
+        fetchAgents();
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [activeTab]);
+
   const totalFindings = findings.length;
   const criticalFindings = findings.filter(f => f.Severity >= 3).length;
   const functionalBugs = findings.filter(f => f.Type === 'Functional').length;
@@ -589,7 +598,16 @@ function App() {
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
                   {agent.isConnected ? (
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(16, 185, 129, 0.1)', color: 'var(--success)', border: '1px solid var(--success)', borderRadius: '8px', padding: '0.5rem', fontSize: '0.9rem', fontWeight: 500 }}>
-                      <CheckCircle2 size={16} style={{ marginRight: '0.5rem' }} /> Configured
+                      {agent.isActive ? (
+                        <>
+                          <span style={{ width: '8px', height: '8px', background: 'var(--success)', borderRadius: '50%', marginRight: '0.5rem', boxShadow: '0 0 8px var(--success)', animation: 'pulse 2s infinite' }}></span>
+                          Live Connection Active
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={16} style={{ marginRight: '0.5rem' }} /> Configured
+                        </>
+                      )}
                     </div>
                   ) : (
                     <button 

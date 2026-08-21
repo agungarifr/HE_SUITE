@@ -153,6 +153,17 @@ const AGENTS = [
   { id: 'cline', name: 'Cline / Claude Dev', command: 'code --version' }
 ];
 
+// Track MCP heartbeats
+const activeConnections = {};
+
+app.get('/api/mcp/ping', (req, res) => {
+  const agentId = req.query.agent;
+  if (agentId) {
+    activeConnections[agentId] = Date.now();
+  }
+  res.send('ok');
+});
+
 app.get('/api/agents', async (req, res) => {
   try {
     const results = await Promise.all(AGENTS.map(async (agent) => {
@@ -180,11 +191,18 @@ app.get('/api/agents', async (req, res) => {
           await fs.access(path.join(__dirname, '.cline', 'mcp_settings.json'));
           isConnected = true;
         }
-      } catch(e) {
-        // File doesn't exist
+      } catch (e) {
+        isConnected = false;
       }
+      
+      const isActive = activeConnections[agent.id] && (Date.now() - activeConnections[agent.id] < 10000);
 
-      return { ...agent, isInstalled, isConnected };
+      return {
+        ...agent,
+        isInstalled,
+        isConnected,
+        isActive
+      };
     }));
     res.json(results);
   } catch (err) {
@@ -199,7 +217,7 @@ app.post('/api/agents/connect', async (req, res) => {
       mcpServers: {
         "he-suite": {
           command: "node",
-          args: ["mcp_server.js"],
+          args: ["mcp_server.js", agentId],
           env: {}
         }
       }
