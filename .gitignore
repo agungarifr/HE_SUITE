@@ -29,7 +29,10 @@ landing.png
 login.png
 *.png
 
-# Agent Configurations
+# Internal docs (not for distribution)
+EVALUATION_GUIDE.md
+
+# Agent Config files (MCP secrets - exclude only the generated config files, not the rules)
 .agents/mcp_config.json
 .cursor/mcp.json
 .cline/mcp_settings.json
