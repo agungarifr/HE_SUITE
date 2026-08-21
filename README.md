@@ -43,3 +43,26 @@ HE SUITE now operates as a Production-Ready application:
 - **Sessions**: The Web Terminal session runs as a background process so you can switch tabs or close the dashboard without losing your agent's context.
 
 *Note: For the Freebuff AI integration to work out of the box in the Web Terminal, make sure `freebuff` is installed globally on your machine.*
+
+---
+
+## Troubleshooting
+
+If you encounter errors during the global installation (`npm install -g`), check these common issues:
+
+### 1. `ENOTDIR: not a directory, rename...`
+**Cause:** This happens if you previously used `npm link` on an older version of `he-suite`, leaving a broken symlink in your global `node_modules` folder. NPM tries to overwrite it but fails.
+**Solution:** Find and remove the broken symlink or folder manually. For example on macOS/Homebrew:
+```bash
+rm -rf /opt/homebrew/lib/node_modules/he-suite
+# Then run install again:
+npm install -g github:agungarifr/HE_SUITE
+```
+
+### 2. `spawn sh ENOENT` (Puppeteer Installation Error)
+**Cause:** This is a known macOS/NPM bug where NPM fails to find the shell (`sh`) when running `postinstall` scripts (like downloading Chromium for Puppeteer) directly from a GitHub repository installation.
+**Solution:** Clear your npm cache and bypass the scripts using `--ignore-scripts`:
+```bash
+npm cache clean --force
+npm install -g github:agungarifr/HE_SUITE --ignore-scripts
+```
