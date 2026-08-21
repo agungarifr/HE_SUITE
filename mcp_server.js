@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const REPORTS_PATH = path.join(__dirname, "public", "data", "reports.json");
-const CRAWLER_REPORT_PATH = path.join(__dirname, "crawler_report.json");
+const CRAWLER_REPORT_PATH = path.join(process.cwd(), "crawler_report.json");
 const FINDINGS_PATH = path.join(__dirname, "public", "data", "findings.json"); // legacy
 const STORIES_PATH = path.join(__dirname, "public", "data", "user_stories.json");
 const KB_PATH = path.join(__dirname, "public", "knowledge_base");

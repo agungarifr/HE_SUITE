@@ -105,7 +105,7 @@ async function crawl(targetUrl, id, pass) {
     
     // 4. Capture Screenshot for UX Evaluation
     console.log("[Crawler] Capturing full page screenshot...");
-    const screenshotPath = path.join(__dirname, 'crawler_screenshot.png');
+    const screenshotPath = path.join(process.cwd(), 'crawler_screenshot.png');
     await page.screenshot({ path: screenshotPath, fullPage: true });
 
     // 5. Extract Interactive Elements DOM for Fuzzing/Functional Analysis
@@ -134,7 +134,7 @@ async function crawl(targetUrl, id, pass) {
 
     // Save Functional Context
     console.log("[Crawler] Saving functional context...");
-    const reportPath = path.join(__dirname, 'crawler_report.json');
+    const reportPath = path.join(process.cwd(), 'crawler_report.json');
     await fs.writeFile(reportPath, JSON.stringify(functionalData, null, 2));
 
     console.log("[Crawler] Done. Report saved to crawler_report.json and screenshot to crawler_screenshot.png");
