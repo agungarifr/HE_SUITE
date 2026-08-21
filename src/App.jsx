@@ -128,16 +128,11 @@ function App() {
     }
   }, [activeTab]);
 
-  const totalFindings = findings.length;
-  const criticalFindings = findings.filter(f => f.Severity >= 3).length;
-  const functionalBugs = findings.filter(f => f.Type === 'Functional').length;
-  const uxIssues = findings.filter(f => f.Type === 'UX' || !f.Type).length;
-
   const exportData = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(findings, null, 2));
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reports, null, 2));
     const a = document.createElement('a');
     a.setAttribute("href", dataStr);
-    a.setAttribute("download", "he_findings.json");
+    a.setAttribute("download", "he_reports.json");
     a.click();
   };
 

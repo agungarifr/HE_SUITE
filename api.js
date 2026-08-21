@@ -33,6 +33,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve static frontend files
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
+
 // List all markdown files
 app.get('/api/kb', async (req, res) => {
   try {
@@ -323,6 +327,11 @@ app.post('/api/agents/launch', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Fallback for SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 const PORT = 8888;

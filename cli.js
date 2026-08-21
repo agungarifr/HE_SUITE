@@ -14,11 +14,23 @@ program
   .description('CLI for HE SUITE tools')
   .version('1.0.0');
 
-program.command('serve')
-  .description('Start the Knowledge Base CMS API')
+program.command('ui')
+  .description('Start the UI Dashboard and API Server')
   .action(() => {
-    console.log('Starting API server...');
-    fork(path.join(__dirname, 'api.js'));
+    console.log('Starting HE SUITE Dashboard...');
+    const p = fork(path.join(__dirname, 'api.js'));
+    
+    // Give it a moment to bind to the port before opening the browser
+    setTimeout(() => {
+      let openCommand;
+      if (process.platform === 'darwin') openCommand = 'open';
+      else if (process.platform === 'win32') openCommand = 'start';
+      else openCommand = 'xdg-open';
+      
+      import('child_process').then(({ exec }) => {
+        exec(`${openCommand} http://localhost:8888`);
+      });
+    }, 1000);
   });
 
 program.command('mcp')
