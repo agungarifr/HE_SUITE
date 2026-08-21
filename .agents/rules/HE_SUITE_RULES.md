@@ -10,3 +10,6 @@ Ketika Anda (Gemini) diminta untuk melakukan Heuristic Evaluation (HE) menggunak
 
 3. **Gunakan Crawler Internal:**
    Jika pengguna meminta evaluasi komprehensif, pastikan Anda memeriksa `crawler_report.json` yang berisi konteks Fungsional dan Data KMS, serta `crawler_screenshot.png` untuk analisis visual.
+
+4. **DILARANG MONOLOG:**
+   Langsung ke inti permasalahan. Jangan mencetak "<think>", proses berpikir, atau monolog internal Anda ke pengguna. Berikan respons akhir yang singkat, padat, dan jelas (Concise and Direct).
