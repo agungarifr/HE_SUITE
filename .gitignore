@@ -1,0 +1,44 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Generated reports & files
+crawler_report.json
+crawler_screenshot.png
+landing.png
+login.png
+*.png
+
+# Agent Configurations
+.agents/
+.cursor/
+.cline/
+mcp.json
+mcp_settings.json
+
+# Process IDs
+.api_pid
+.mcp_pid
+.vite_pid
+.he_suite.log

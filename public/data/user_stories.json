@@ -1,0 +1,25 @@
+[
+  {
+    "ID": "US001",
+    "Title": "User Login Flow",
+    "User_Story": "Sebagai user, saya ingin login menggunakan email dan password agar saya bisa mengakses dashboard saya.",
+    "Acceptance_Criteria": [
+      "Form login terlihat.",
+      "Pesan error muncul jika password dan akun/id/email salah.",
+      "terdapat privacy policy dan atau terms and condition dan atau privacy notice.",
+      "form password ada fitur show/hide password.",
+      "UI halaman login harus mengikut prinsip HE ke 7 dan tidak overwhelming dengan informasi tidak berguna."
+    ],
+    "isActive": true
+  },
+  {
+    "Title": "Browsing landing page",
+    "User_Story": "Saya sedang membaca halaman landing dari suatu website berharap mengetahui solusi/produk apa yang sedang ditawarkan oleh website tersebut.",
+    "Acceptance_Criteria": [
+      "Terdapat deskripsi produk, harga, demo, contact us untuk berlangganan dan atau harga subs.",
+      "Desain penyajian Informasi harus mengikuti prinsip heuristic ke 7, tidak overwhelming, singkat padat jelas dan menggunakan bahasa marketing menarik."
+    ],
+    "ID": "US8256",
+    "isActive": false
+  }
+]]

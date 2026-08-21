@@ -1,0 +1,202 @@
+[
+  {
+    "ID": "HE-0001",
+    "Type": "Functional",
+    "Severity": 4,
+    "Heuristic_Type": "Functional: CSP Configuration",
+    "Issue_Title": "Content Security Policy memblokir SEMUA CSS dan JS situs sendiri",
+    "Description": "Crawler menunjukkan bahwa CSP header 'script-src' dan 'style-src' hanya mengizinkan 'unsafe-inline' dan Cloudflare challenge domain. Akibatnya, SELURUH file CSS (app.BpptHA9x.css) dan SEMUA JS chunks (start, app, nodes, chunks) situs sendiri DI-BLOKIR oleh browser. Halaman rendering tanpa styling dan tanpa JavaScript — user melihat halaman mentah tanpa fungsionalitas. Ini adalah bug konfigurasi server yang parah.",
+    "Recommendation": "Perbarui CSP header untuk mengizinkan aset first-party: tambahkan 'self' ke script-src dan style-src (contoh: script-src 'self' 'nonce-xxx' https://challenges.cloudflare.com). Validasi dengan browser DevTools → Console untuk memastikan tidak ada CSP violations.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0002",
+    "Type": "Functional",
+    "Severity": 4,
+    "Heuristic_Type": "Functional: JavaScript Bootstrap",
+    "Issue_Title": "Seluruh JavaScript aplikasi gagal dimuat — halaman tanpa interaktivitas",
+    "Description": "Karena CSP memblokir semua script, tidak ada satu pun JavaScript yang berhasil dimuat. Crawler tidak mendeteksi ada tombol interactive (0 buttons, 1 hidden input). Aplikasi SvelteKit yang seharusnya hydrate menjadi SPA sepenuhnya tidak berfungsi. User hanya melihat konten SSR statis tanpa bisa berinteraksi.",
+    "Recommendation": "Perbaiki CSP header (lihat HE-0001). Setelah CSP diperbaiki, verifikasi bahwa semua SvelteKit entry scripts (start.js, app.js) berhasil dimuat dan aplikasi hydrate dengan benar.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0003",
+    "Type": "Functional",
+    "Severity": 4,
+    "Heuristic_Type": "Functional: Cloudflare Challenge",
+    "Issue_Title": "Cloudflare Turnstile challenge gagal resolved — DNS error pada challenge platform",
+    "Description": "Crawler menunjukkan error DNS (ERR_NAME_NOT_RESOLVED) pada brunhild.challenges.cloudflare.com. Turnstile widget tidak dapat menyelesaikan challenge, sehingga user mungkin terjebak di halaman challenge tanpa bisa masuk ke konten. Meskipun live fetch berhasil (200 OK), ini menunjukkan inkonsistensi: kadang Cloudflare challenge pass, kadang tidak.",
+    "Recommendation": "Verifikasi Cloudflare Turnstile configuration. Pastikan domain challenge platform bisa di-resolve. Pertimbangkan fallback mechanism jika Turnstile gagal (misalnya rate limiting atau CAPTCHA alternatif).",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0004",
+    "Type": "Functional",
+    "Severity": 3,
+    "Heuristic_Type": "Functional: Resource Loading",
+    "Issue_Title": "Beberapa resource mengembalikan 403 dan 404",
+    "Description": "Crawler mencatat setidaknya satu request yang menghasilkan 403 (Forbidden) dan dua request 404 (Not Found). 403 menunjukkan ada resource yang di-block server (mungkin oleh Cloudflare WAF), dan 404 menunjukkan ada aset yang sudah tidak ada atau path yang salah. Meskipun ini tidak memblokir seluruh situs, ini mengindikasikan ada resource management yang perlu diperbaiki.",
+    "Recommendation": "Audit semua internal links dan aset. Hapus atau perbarui broken links (404). Investigasi 403 — kemungkinan ada file yang di-rename atau dipindah tanpa update path.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0005",
+    "Type": "UX",
+    "Severity": 3,
+    "Heuristic_Type": "Heuristic 1: Visibility of System Status",
+    "Issue_Title": "Tidak ada loading indicator saat halaman dimuat",
+    "Description": "Halaman mengandung konten SSR (judul 'Homepage - Shinigami Scans', navigasi, section) tetapi tidak ada indikator loading atau skeleton screen yang terlihat. Ketika CSP memblokir JS, user melihat halaman statis tanpa mengetahui ada yang salah. Tidak ada feedback yang menginformasikan bahwa aplikasi seharusnya memiliki fitur interaktif lebih.",
+    "Recommendation": "Tambahkan splash screen atau skeleton loader yang ditampilkan sebelum SvelteKit hydrate. Jika JavaScript gagal load, tampilkan fallback message seperti 'Aplikasi membutuhkan JavaScript. Silakan aktifkan JavaScript di browser Anda.'",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0006",
+    "Type": "UX",
+    "Severity": 3,
+    "Heuristic_Type": "Heuristic 2: Match Between System and the Real World",
+    "Issue_Title": "Konten hanya dalam Bahasa Indonesia tanpa opsi bahasa lain",
+    "Description": "Seluruh konten navigasi dan teks hanya menggunakan Bahasa Indonesia: 'Pengumuman', 'Semua', 'Rekomendasi', 'Update', 'Populer'. Untuk situs manga/comic scans yang mungkin memiliki audiens internasional, tidak ada opsi切换 bahasa. Ini membatasi aksesibilitas bagi non-Indonesian speakers.",
+    "Recommendation": "Pertimbangkan menambahkan language switcher (ID/EN) di header, atau minimal terjemahkan elemen navigasi utama ke bahasa Inggris sebagai default internasional.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0007",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 4: Consistency and Standards",
+    "Issue_Title": "Judul halaman tidak konsisten — 'Homepage' duplikat dengan navigasi 'Home'",
+    "Description": "Title tag browser menampilkan 'Homepage - Shinigami Scans' sementara navigasi menampilkan 'Home'. Penggunaan 'Homepage' vs 'Home' tidak konsisten. Di standar web, halaman utama biasanya hanya berjudul 'Home' atau nama situs saja.",
+    "Recommendation": "Ubah title tag menjadi 'Shinigami Scans' atau 'Shinigami Scans - Home' untuk konsistensi. Gunakan title yang deskriptif tapi ringkas.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0008",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 6: Recognition Rather Than Recall",
+    "Issue_Title": "Tidak ada breadcrumb atau indikator posisi saat navigasi",
+    "Description": "Navigasi hanya menampilkan link datar (Home, Explore, Library, Search) tanpa breadcrumb atau indikator posisi aktif. Ketika user berada di halaman dalam, mereka tidak memiliki cara untuk mengetahui posisi mereka dalam hierarchy situs.",
+    "Recommendation": "Tambahkan breadcrumb navigation untuk halaman detail (series, chapter). Highlight menu aktif di navigation bar. Tambahkan skip-to-content link untuk accessibility.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0009",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 8: Aesthetic and Minimalist Design",
+    "Issue_Title": "Copyright year sudah usang (2024) — kesan tidak terawat",
+    "Description": "Footer menampilkan 'Copyright ©2024 Izanami All rights Reserved'. Tahun 2024 sudah lewat (kita di 2026). Ini memberikan kesan bahwa situs tidak diperbarui secara berkala, yang bisa menurunkan kepercayaan user terhadap freshness konten manga yang ditampilkan.",
+    "Recommendation": "Perbarui copyright year secara otomatis menggunakan JavaScript (new Date().getFullYear()) atau update manual ke tahun terkini. Pertimbangkan juga menggunakan copyright range (©2024-2026).",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-0010",
+    "Type": "UX",
+    "Severity": 1,
+    "Heuristic_Type": "Heuristic 9: Help Users Recognize, Diagnose, and Recover from Errors",
+    "Issue_Title": "Tidak ada error page atau fallback untuk halaman yang tidak ditemukan",
+    "Description": "Crawler mencatat 404 errors untuk beberapa resource. Tidak ada informasi tentang apakah situs memiliki custom 404 page yang membantu user menemukan konten yang mereka cari. User yang mengakses URL yang salah akan melihat error default browser atau halaman kosong.",
+    "Recommendation": "Buat custom 404 page yang helpful — tampilkan pesan yang jelas ('Halaman tidak ditemukan'), link ke halaman utama, dan search bar untuk membantu user menemukan manga yang dicari.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-FUNC-1",
+    "Type": "Functional",
+    "Severity": 4,
+    "Heuristic_Type": "Functional: Application Bootstrap",
+    "Issue_Title": "JavaScript error saat load halaman — 'Cannot read properties of undefined (reading prototype)'",
+    "Description": "Pada saat halaman utama digitalpass.id dimuat, terjadi JavaScript error: \"Cannot read properties of undefined (reading 'prototype')\". Error ini terjadi di sisi client dan mengindikasikan ada library atau dependency yang gagal dimuat atau diinisialisasi dengan benar. Meskipun halaman masih bisa menampilkan konten (SSR/CSR hybrid), error ini berpotensi memblokir fitur interaktif tertentu dan mengurangi keandalan aplikasi.",
+    "Recommendation": "Investigasi stack trace error ini di browser console. Kemungkinan besar ada import yang salah atau versi library yang tidak kompatibel. Periksa apakah semua dependency ter-load dengan benar dan gunakan error boundary di React untuk graceful degradation.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-FUNC-2",
+    "Type": "Functional",
+    "Severity": 2,
+    "Heuristic_Type": "Functional: Analytics",
+    "Issue_Title": "Google Analytics tracking gagal (net::ERR_ABORTED)",
+    "Description": "Request ke Google Analytics (POST ke analytics.google.com/g/collect) menghasilkan error net::ERR_ABORTED. Ini berarti tracking data tidak terkirim ke GA, sehingga data analitik untuk pengambilan keputusan produk tidak lengkap. Kemungkinan ada konfigusi GA4 yang salah, ad-blocker, atau masalah CORS.",
+    "Recommendation": "Pastikan GA4 measurement ID (G-HRCRBT928Y) terkonfigurasi dengan benar. Cek apakah ada CSP (Content Security Policy) yang memblokir request ke google-analytics.com. Test dengan debug mode GA4 untuk memverifikasi event terkirim.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-5914",
+    "Type": "UX",
+    "Severity": 3,
+    "Heuristic_Type": "Heuristic 4: Consistency and Standards",
+    "Issue_Title": "Tidak ada tautan Privacy Policy & Terms and Condition di halaman Login",
+    "Description": "Pada halaman login (maupun form login state), tidak ditemukan tautan menuju 'Privacy Policy' atau 'Terms and Conditions' sesuai dengan persyaratan di User Story US001. Hanya ada tautan 'Hubungi Kami' jika terjadi kendala. Ini melanggar standar industri dan persyaratan acceptance criteria US001: \"terdapat privacy policy dan atau terms and condition\". Sebagai produk digital yang mengumpulkan data pengguna (email, NIK), ketiadaan legal notice merupakan risiko compliance.",
+    "Recommendation": "Tambahkan tautan kecil di bagian bawah form login (footer) yang mengarah ke Privacy Policy dan Terms of Service. Ini adalah standard pattern di hampir semua produk digital yang mengumpulkan data pengguna.",
+    "User_Story_Context": "US001"
+  },
+  {
+    "ID": "HE-5908",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 7: Flexibility and Efficiency of Use",
+    "Issue_Title": "Login menggunakan Email/Password memerlukan ekstra klik — tidak efisien untuk user reguler",
+    "Description": "Form login terlihat minimalis dan bersih. Namun, tombol login default menggunakan 'Login via Microsoft'. Untuk login menggunakan Email atau NIK, pengguna harus menekan tombol tambahan terlebih dahulu. Hal ini mengurangi efisiensi bagi pengguna reguler (non-Microsoft) karena menambah langkah yang tidak perlu (friction). Mayoritas pengguna Indonesia menggunakan email atau NIK, bukan Microsoft account.",
+    "Recommendation": "Tampilkan input teks untuk Email dan Password secara langsung di halaman utama login bersamaan dengan tombol opsi 'Login via Microsoft'. Ini mengurangi friction untuk user reguler. Alternatif: gunakan tab atau toggle untuk switch antara Email/NIK login dan Microsoft login.",
+    "User_Story_Context": "US001"
+  },
+  {
+    "ID": "HE-NEW-1",
+    "Type": "UX",
+    "Severity": 4,
+    "Heuristic_Type": "Heuristic 5: Error Prevention",
+    "Issue_Title": "Tombol 'Ajukan Layanan' muncul 2 kali dengan teks identik tanpa pembeda",
+    "Description": "Pada halaman landing, terdapat dua tombol dengan teks 'Ajukan Layanan' yang identik dan terlihat sama. Tidak ada perbedaan visual (warna, ikon, posisi) atau konteks yang membedakan keduanya. Ini menimbulkan kebingungan pengguna: tombol mana yang harus ditekan? Apakah keduanya mengarah ke tujuan yang sama? Ini melanggar Error Prevention karena user bisa melakukan aksi yang salah tanpa disadari.",
+    "Recommendation": "Hapus salah satu tombol jika fungsinya sama, atau berikan label yang berbeda untuk membedakan tujuan masing-masing (contoh: 'Ajukan Layanan Baru' vs 'Lanjutkan Pengajuan'). Pastikan hanya ada satu primary CTA yang jelas per halaman.",
+    "User_Story_Context": "US8256"
+  },
+  {
+    "ID": "HE-NEW-2",
+    "Type": "UX",
+    "Severity": 3,
+    "Heuristic_Type": "Heuristic 8: Aesthetic and Minimalist Design",
+    "Issue_Title": "Tidak ada informasi Harga (Pricing) dan Demo di Landing Page",
+    "Description": "Pada halaman landing page utama, deskripsi layanan sudah tersedia dan desain sangat minimalis serta tidak overwhelming. Namun, pengguna tidak dapat menemukan informasi harga/subscription atau tombol Demo produk. Ini melanggar kriteria di User Story US8256: \"Terdapat deskripsi produk, harga, demo, contact us untuk berlangganan\". Tanpa pricing, user tidak bisa membuat keputusan purchasing. Tanpa demo, user tidak bisa mengevaluasi produk sebelum berlangganan.",
+    "Recommendation": "Tambahkan bagian Pricing Card di area utama landing page yang menampilkan tier/harga produk. Sediakan tombol CTA 'Coba Demo' atau 'Live Demo' yang prominent. Jika harga belum final, gunakan 'Hubungi Sales' atau 'Request Quote' sebagai alternatif.",
+    "User_Story_Context": "US8256"
+  },
+  {
+    "ID": "HE-NEW-3",
+    "Type": "UX",
+    "Severity": 3,
+    "Heuristic_Type": "Heuristic 5: Error Prevention",
+    "Issue_Title": "Tidak ada fitur show/hide password di form login",
+    "Description": "Berdasarkan crawler data, halaman login tidak memiliki input fields (inputs: []). Ini mengindikasikan form login tidak ditemukan atau belum di-render saat crawler mengambil data. Namun dari button 'Masuk', form login kemungkinan menggunakan modal atau SPA routing. Acceptance Criteria US001 secara eksplisit menyatakan: \"form password ada fitur show/hide password\". Tanpa fitur ini, user tidak bisa memverifikasi input password mereka, meningkatkan risiko typing error.",
+    "Recommendation": "Tambahkan ikon eye/eye-off toggle di sebelah kanan input password untuk memungkinkan user menampilkan atau menyembunyikan password mereka. Ini adalah standar industri untuk semua form login.",
+    "User_Story_Context": "US001"
+  },
+  {
+    "ID": "HE-NEW-4",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 9: Help Users Recognize, Diagnose, and Recover from Errors",
+    "Issue_Title": "Tidak ada mekanisme feedback error yang terlihat untuk login gagal",
+    "Description": "Acceptance Criteria US001 menyatakan: \"Pesan error muncul jika password dan akun/id/email salah.\" Namun dari analisis crawler, tidak ditemukan adanya error state handling yang terlihat di UI. Ketika user memasukkan kredensial yang salah, tidak jelas apakah sistem akan menampilkan pesan error yang jelas atau hanya diam tanpa feedback.",
+    "Recommendation": "Implementasikan error message yang muncul di bawah form login dengan pesan yang spesifik (contoh: \"Email atau password salah\") dan saran pemulihan (\"Lupa password? Reset disini\"). Jangan gunakan pesan generik seperti \"Login failed\" tanpa panduan.",
+    "User_Story_Context": "US001"
+  },
+  {
+    "ID": "HE-NEW-5",
+    "Type": "UX",
+    "Severity": 2,
+    "Heuristic_Type": "Heuristic 7: Flexibility and Efficiency of Use",
+    "Issue_Title": "Tidak ada keyboard shortcut atau accessibility navigation yang terlihat",
+    "Description": "Tidak ditemukan adanya skip navigation links, aria landmarks, atau keyboard shortcut hints di halaman. Untuk produk digital yang ditujukan untuk pengguna profesional, keyboard accessibility penting untuk efisiensi. WCAG 2.1 Level A juga mewajibkan keyboard operability.",
+    "Recommendation": "Tambahkan skip-to-content link, pastikan semua interactive elements bisa diakses via keyboard (Tab/Enter/Space), dan gunakan ARIA landmarks yang benar untuk navigasi screen reader.",
+    "User_Story_Context": "Global"
+  },
+  {
+    "ID": "HE-NEW-6",
+    "Type": "UX",
+    "Severity": 1,
+    "Heuristic_Type": "Heuristic 10: Help and Documentation",
+    "Issue_Title": "Tidak ada search bar atau help center yang mudah diakses",
+    "Description": "Tidak ditemukan search bar atau pusat bantuan di halaman landing. Untuk produk DigitalPass yang menawarkan layanan digital, user mungkin perlu mencari informasi spesifik tentang fitur, pricing, atau cara penggunaan. Tanpa search atau help center, user harus mengandalkan navigasi manual yang bisa memakan waktu.",
+    "Recommendation": "Tambahkan search bar di header atau halaman bantuan (Help Center/FAQ) yang mudah diakses. Pertimbangkan juga chat widget untuk support instan.",
+    "User_Story_Context": "Global"
+  }
+]
