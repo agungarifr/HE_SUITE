@@ -16,9 +16,17 @@ HE SUITE is a comprehensive Heuristic Evaluation toolkit built for UI/UX evaluat
 You can install `HE_SUITE` globally on your machine directly from GitHub without cloning the repository!
 
 ### 1. Install Globally
-Make sure you have Node.js and NPM installed. Then run:
+You can install directly from GitHub (requires Node.js and NPM):
 ```bash
-npm install -g github:agungarifr/HE_SUITE
+npm install -g github:agungarifr/HE_SUITE --ignore-scripts
+```
+
+**Alternative Installation (Recommended if GitHub install fails):**
+Clone or download the repository, then install it globally from the folder:
+```bash
+git clone https://github.com/agungarifr/HE_SUITE.git
+cd HE_SUITE
+npm install -g .
 ```
 
 ### 2. Start the Application
