@@ -21,7 +21,10 @@
     "lucide-react": "^1.33.0",
     "puppeteer": "^25.8.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "ws": "^8.21.3",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

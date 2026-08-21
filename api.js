@@ -3,7 +3,8 @@ import cors from 'cors';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
+import { WebSocketServer } from 'ws';
 import util from 'util';
 import os from 'os';
 
@@ -327,6 +328,57 @@ app.post('/api/agents/launch', async (req, res) => {
 const PORT = 8888;
 const server = app.listen(PORT, () => {
   console.log(`Knowledge Base CMS API running on http://localhost:${PORT}`);
+});
+
+const wss = new WebSocketServer({ server });
+
+wss.on('connection', (ws) => {
+  console.log('Client connected to Web Terminal');
+  let currentProcess = null;
+
+  ws.on('message', (msg) => {
+    try {
+      const data = JSON.parse(msg.toString());
+      
+      if (data.type === 'start') {
+        const agentId = data.agentId;
+        if (currentProcess) currentProcess.kill();
+        
+        // Spawn the agent in a shell
+        const cmd = agentId === 'freebuff' ? 'freebuff' : 'agy';
+        currentProcess = spawn(cmd, [], {
+          cwd: __dirname,
+          shell: true,
+          env: { ...process.env, FORCE_COLOR: '1' }
+        });
+
+        currentProcess.stdout.on('data', (d) => {
+          ws.send(JSON.stringify({ type: 'output', data: d.toString() }));
+        });
+
+        currentProcess.stderr.on('data', (d) => {
+          ws.send(JSON.stringify({ type: 'output', data: d.toString() }));
+        });
+
+        currentProcess.on('close', (code) => {
+          ws.send(JSON.stringify({ type: 'output', data: `\r\n\x1b[31m[Process exited with code ${code}]\x1b[0m\r\n` }));
+        });
+      } else if (data.type === 'input') {
+        if (currentProcess && currentProcess.stdin) {
+          currentProcess.stdin.write(data.input);
+        }
+      }
+    } catch (e) {
+      console.error("WS Error:", e);
+    }
+  });
+
+  ws.on('close', () => {
+    console.log('Client disconnected from Web Terminal');
+    if (currentProcess) {
+      currentProcess.kill();
+    }
+  });
 });
 
 server.on('error', (e) => {

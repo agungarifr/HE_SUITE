@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, BookOpen, Download, AlertCircle, RefreshCw, Database, Edit3, Trash2, Plus, Save, X, Terminal, CheckCircle2 } from 'lucide-react';
+import { Activity, BookOpen, Download, AlertCircle, RefreshCw, Database, Edit3, Trash2, Plus, Save, X, Terminal, CheckCircle2, TerminalSquare } from 'lucide-react';
+import WebTerminal from './WebTerminal';
 import './index.css';
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [installedAgents, setInstalledAgents] = useState([]);
   const [connectingAgent, setConnectingAgent] = useState(null);
   const [launchingAgent, setLaunchingAgent] = useState(null);
+  const [activeAgentTerminal, setActiveAgentTerminal] = useState(null);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -87,6 +89,13 @@ function App() {
   };
 
   const launchAgent = async (agentId) => {
+    // If it's a CLI tool, launch it in the embedded Web Terminal instead!
+    if (agentId === 'freebuff' || agentId === 'antigravity') {
+      setActiveAgentTerminal(agentId);
+      setActiveTab('terminal');
+      return;
+    }
+
     setLaunchingAgent(agentId);
     try {
       const res = await fetch('/api/agents/launch', {
@@ -638,6 +647,32 @@ function App() {
     </>
   );
 
+  const renderTerminal = () => {
+    if (!activeAgentTerminal) {
+      return (
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <TerminalSquare size={48} style={{ opacity: 0.5, marginBottom: '1rem' }} />
+          <h2>Web Terminal</h2>
+          <p>Please launch an agent from the Integrations tab to start the terminal.</p>
+          <button className="btn btn-primary" style={{ marginTop: '1rem' }} onClick={() => setActiveTab('integrations')}>
+            Go to Integrations
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: '1rem' }}>
+        <div className="header" style={{ marginBottom: 0 }}>
+          <h2>{activeAgentTerminal.toUpperCase()} Web Terminal</h2>
+          <button className="btn glass-panel" onClick={() => setActiveAgentTerminal(null)}>Close Terminal</button>
+        </div>
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <WebTerminal agentId={activeAgentTerminal} />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="app-container">
       <nav className="sidebar">
@@ -677,6 +712,13 @@ function App() {
           >
             <Terminal size={18} /> Integrations
           </button>
+          <button 
+            className={`nav-item ${activeTab === 'terminal' ? 'active' : ''}`}
+            onClick={() => setActiveTab('terminal')}
+            style={{ width: '100%', textAlign: 'left', background: 'transparent', border: activeTab === 'terminal' ? '1px solid rgba(59, 130, 246, 0.3)' : 'none' }}
+          >
+            <TerminalSquare size={18} /> Web Terminal
+          </button>
         </div>
 
         <div style={{ marginTop: 'auto', padding: '1.5rem', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
@@ -690,6 +732,7 @@ function App() {
         {activeTab === 'stories' && renderStories()}
         {activeTab === 'kb' && renderCMS()}
         {activeTab === 'integrations' && renderIntegrations()}
+        {activeTab === 'terminal' && renderTerminal()}
       </main>
     </div>
   );
