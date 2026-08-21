@@ -330,7 +330,7 @@ app.post('/api/agents/launch', async (req, res) => {
 });
 
 // Fallback for SPA routing
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
