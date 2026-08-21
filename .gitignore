@@ -31,9 +31,9 @@ login.png
 *.png
 
 # Agent Configurations
-.agents/
-.cursor/
-.cline/
+.agents/mcp_config.json
+.cursor/mcp.json
+.cline/mcp_settings.json
 mcp.json
 mcp_settings.json
 
