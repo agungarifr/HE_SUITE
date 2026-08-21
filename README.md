@@ -1,16 +1,45 @@
-# React + Vite
+# HE SUITE
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+HE SUITE is a comprehensive Heuristic Evaluation toolkit built for UI/UX evaluation and reporting. It features a standalone Web Dashboard, persistent Web Terminal integration, and AI-driven automation (like Freebuff CLI).
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Web Dashboard**: An interactive, side-by-side view of your Evaluation Reports and detailed findings.
+- **Persistent Web Terminal**: A built-in terminal that stays active in the background even if you close the tab, keeping your AI agent (Freebuff) alive with its memory intact.
+- **Automated AI Rules**: Built-in rules that prevent the AI from taking destructive actions on your server.
+- **Instant Usage**: Completely standalone installation via GitHub.
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Installation & Usage
 
-## Expanding the Oxlint configuration
+You can install `HE_SUITE` globally on your machine directly from GitHub without cloning the repository!
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+### 1. Install Globally
+Make sure you have Node.js and NPM installed. Then run:
+```bash
+npm install -g github:agungarifr/HE_SUITE
+```
+
+### 2. Start the Application
+Once installed, you can launch the HE SUITE Dashboard from anywhere in your terminal:
+```bash
+he-suite ui
+```
+
+This will automatically start the background server and open your default browser to `http://localhost:8888`.
+
+### Additional Commands
+
+- `he-suite mcp`: Start the MCP server manually.
+- `he-suite HE <url>`: Run the Heuristic Evaluation Crawler on a specific URL.
+
+---
+
+## Architecture
+
+HE SUITE now operates as a Production-Ready application:
+- **UI**: The React dashboard is pre-built and served directly by the `api.js` Express server.
+- **Sessions**: The Web Terminal session runs as a background process so you can switch tabs or close the dashboard without losing your agent's context.
+
+*Note: For the Freebuff AI integration to work out of the box in the Web Terminal, make sure `freebuff` is installed globally on your machine.*
