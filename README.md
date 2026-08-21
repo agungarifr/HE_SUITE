@@ -49,7 +49,11 @@ The most stable way to install HE SUITE is to download the files locally to your
    ```bash
    cd HE_SUITE
    ```
-3. Install the application globally to your system:
+3. Install semua dependensi yang dibutuhkan:
+   ```bash
+   npm install
+   ```
+4. Install aplikasi secara global ke sistem Anda:
    ```bash
    npm install -g .
    ```
