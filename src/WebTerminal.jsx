@@ -16,8 +16,8 @@ export default function WebTerminal({ agentId }) {
     const term = new Terminal({
       cursorBlink: true,
       theme: {
-        background: '#0f172a',
-        foreground: '#f8fafc',
+        background: '#ffffff',
+        foreground: '#1e293b',
         cursor: '#3b82f6',
         black: '#000000',
         red: '#ef4444',
@@ -90,7 +90,7 @@ export default function WebTerminal({ agentId }) {
   }, [agentId]);
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '600px', padding: '1rem', background: '#0f172a', borderRadius: '12px' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '600px', padding: '1rem', background: '#ffffff', borderRadius: '12px' }}>
       <div ref={terminalRef} style={{ width: '100%', height: '100%' }}></div>
     </div>
   );

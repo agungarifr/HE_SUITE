@@ -5,13 +5,13 @@ import './index.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [findings, setFindings] = useState([]);
+  const [reports, setReports] = useState([]);
   const [userStories, setUserStories] = useState([]);
   const [kbFiles, setKbFiles] = useState([]);
   const [editingKbFile, setEditingKbFile] = useState(null); 
   const [editingStory, setEditingStory] = useState(null); // CMS state for stories
   const [selectedStoryId, setSelectedStoryId] = useState(null); // For 2-column view
-  const [selectedFindingId, setSelectedFindingId] = useState(null); // For dashboard 2-column view
+  const [selectedReportId, setSelectedReportId] = useState(null); // For dashboard 2-column view
   const [isLoading, setIsLoading] = useState(false);
   const [installedAgents, setInstalledAgents] = useState([]);
   const [connectingAgent, setConnectingAgent] = useState(null);
@@ -21,8 +21,8 @@ function App() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const findingsRes = await fetch('/data/findings.json?' + new Date().getTime());
-      if (findingsRes.ok) setFindings(await findingsRes.json());
+      const reportsRes = await fetch('/data/reports.json?' + new Date().getTime());
+      if (reportsRes.ok) setReports(await reportsRes.json());
       
       await fetchStories();
       if (activeTab === 'kb') await fetchKbFiles();
@@ -271,6 +271,13 @@ function App() {
   };
 
   // --- Renders ---
+  // Computed stats from all reports
+  const allFindings = reports.flatMap(r => r.findings || []);
+  const totalFindings = allFindings.length;
+  const uxIssues = allFindings.filter(f => f.Type === 'UX').length;
+  const functionalBugs = allFindings.filter(f => f.Type === 'Functional').length;
+  const criticalFindings = allFindings.filter(f => f.Severity >= 3).length;
+
   const renderDashboard = () => (
     <>
       <div className="header">
@@ -309,35 +316,32 @@ function App() {
       <div className="stories-layout">
         <div className="stories-list glass-panel" style={{ overflow: 'hidden', padding: 0, display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)', background: 'rgba(0,0,0,0.2)' }}>
-            <h3 style={{ fontSize: '1rem', margin: 0 }}>Reports</h3>
+            <h3 style={{ fontSize: '1rem', margin: 0 }}>Evaluation Reports</h3>
           </div>
           
           <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '0.5rem' }}>
-            {findings.length === 0 ? (
+            {reports.length === 0 ? (
               <div style={{ padding: '2rem', textAlign: 'center' }}>
                 <AlertCircle size={32} style={{ opacity: 0.2, margin: '0 auto 1rem', display: 'block' }} />
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No findings yet.</p>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>No reports yet.</p>
               </div>
             ) : (
-              findings.map((f, i) => {
-                const id = f.ID || `HE-${i+1}`;
-                const isSelected = selectedFindingId === id;
-                const isFunctional = f.Type === 'Functional';
+              reports.map((r, i) => {
+                const isSelected = selectedReportId === r.id;
                 return (
                   <div 
                     key={i} 
                     className={`story-list-item ${isSelected ? 'selected' : ''}`}
-                    style={{ margin: '0 0.5rem', borderRadius: '8px', borderLeft: isFunctional ? '4px solid var(--danger)' : '4px solid var(--primary)' }}
-                    onClick={() => setSelectedFindingId(id)}
+                    style={{ margin: '0 0.5rem', borderRadius: '8px' }}
+                    onClick={() => setSelectedReportId(r.id)}
                   >
                     <div className="story-list-item-content">
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div className="story-id">{id}</div>
-                        <span className={`badge ${f.Severity >= 3 ? 'badge-danger' : f.Severity === 2 ? 'badge-warning' : 'badge-primary'}`} style={{ fontSize: '0.65rem' }}>Sev {f.Severity}</span>
+                        <div className="story-id">{r.id}</div>
                       </div>
-                      <div className="story-title" style={{ fontSize: '0.95rem', margin: '0.25rem 0 0 0' }}>{f.Issue_Title}</div>
-                      <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isFunctional ? 'var(--danger)' : 'var(--primary)', fontWeight: 'bold' }}>
-                        {isFunctional ? 'FUNCTIONAL' : 'UX ISSUE'}
+                      <div className="story-title" style={{ fontSize: '0.95rem', margin: '0.25rem 0 0 0' }}>{new URL(r.website).hostname}</div>
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: 'var(--text-muted)' }}>
+                        {new Date(r.createdAt).toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -347,51 +351,78 @@ function App() {
           </div>
         </div>
         
-        <div className="story-detail-panel glass-panel" style={{ padding: '1.5rem' }}>
-          {selectedFindingId ? (() => {
-            const f = findings.find((f, i) => (f.ID || `HE-${i+1}`) === selectedFindingId);
-            if (!f) return null;
+        <div className="story-detail-panel glass-panel" style={{ padding: '0', overflowY: 'auto' }}>
+          {selectedReportId ? (() => {
+            const report = reports.find(r => r.id === selectedReportId);
+            if (!report) return null;
             return (
               <>
-                <div className="story-detail-header" style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1rem' }}>
+                <div className="story-detail-header" style={{ borderBottom: '1px solid var(--border-color)', padding: '1.5rem', background: 'rgba(0,0,0,0.2)' }}>
                   <div>
-                    <span className="story-id" style={{ fontSize: '1rem' }}>{selectedFindingId}</span>
-                    <h3 className="story-title" style={{ fontSize: '1.5rem', marginTop: '0.25rem' }}>{f.Issue_Title}</h3>
+                    <span className="story-id" style={{ fontSize: '1rem' }}>{report.id}</span>
+                    <h3 className="story-title" style={{ fontSize: '1.5rem', marginTop: '0.25rem' }}>{report.website}</h3>
                     <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                      <span className={`badge ${f.Severity >= 3 ? 'badge-danger' : f.Severity === 2 ? 'badge-warning' : 'badge-primary'}`}>Severity {f.Severity}</span>
-                      <span className="badge badge-primary" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}>{f.Heuristic_Type}</span>
+                      <span className="badge badge-primary">{report.findings.length} Findings</span>
+                      <span className="badge" style={{ background: 'rgba(255,255,255,0.05)' }}>{new Date(report.createdAt).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="story-detail-body">
-                  <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</h4>
-                  <div className="criteria-list" style={{ marginBottom: '1.5rem', whiteSpace: 'pre-wrap' }}>
-                    {f.Description}
-                  </div>
-                  
-                  {f.Recommendation && (
-                    <>
-                      <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Recommendation</h4>
-                      <div className="criteria-list" style={{ marginBottom: '1.5rem', color: 'var(--success)' }}>
-                        {f.Recommendation}
-                      </div>
-                    </>
+                <div style={{ padding: '1.5rem' }}>
+                  {report.findings.length === 0 ? (
+                    <p style={{ color: 'var(--text-muted)' }}>No findings in this report.</p>
+                  ) : (
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>ID & Type</th>
+                          <th>Severity</th>
+                          <th>Issue & Recommendation</th>
+                          <th>Context</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {report.findings.map((f, i) => {
+                          let badgeClass = 'badge-primary';
+                          if (f.Severity === 2) badgeClass = 'badge-warning';
+                          if (f.Severity >= 3) badgeClass = 'badge-danger';
+                          if (f.Severity === 0) badgeClass = 'badge-success';
+                          
+                          const isFunctional = f.Type === 'Functional';
+                          return (
+                            <tr key={i} style={{ borderLeft: isFunctional ? '4px solid var(--danger)' : '4px solid var(--primary)' }}>
+                              <td style={{ verticalAlign: 'top' }}>
+                                <div style={{ fontWeight: 600 }}>{f.ID || `HE-${i+1}`}</div>
+                                <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', color: isFunctional ? 'var(--danger)' : 'var(--primary)', fontWeight: 'bold' }}>
+                                  {isFunctional ? 'FUNCTIONAL' : 'UX ISSUE'}
+                                </div>
+                              </td>
+                              <td style={{ verticalAlign: 'top' }}>
+                                <span className={`badge ${badgeClass}`}>Sev {f.Severity}</span>
+                              </td>
+                              <td>
+                                <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{f.Issue_Title}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>{f.Description}</div>
+                                {f.Recommendation && (
+                                  <div style={{ fontSize: '0.8rem', color: 'var(--success)' }}><strong>Fix:</strong> {f.Recommendation}</div>
+                                )}
+                              </td>
+                              <td style={{ verticalAlign: 'top' }}>
+                                <span className="badge badge-primary" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)' }}>{f.User_Story_Context || 'Global'}</span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   )}
-                  
-                  <h4 style={{ color: 'var(--text-muted)', marginBottom: '0.5rem', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Context</h4>
-                  <div className="criteria-list">
-                    <span style={{ fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '0.25rem 0.5rem', borderRadius: '4px' }}>
-                      {f.User_Story_Context || 'Global Scope'}
-                    </span>
-                  </div>
                 </div>
               </>
             );
           })() : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5 }}>
               <AlertCircle size={48} style={{ marginBottom: '1rem' }} />
-              <p>Select a report to view details</p>
+              <p>Select an evaluation report to view its findings</p>
             </div>
           )}
         </div>

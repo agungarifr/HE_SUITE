@@ -8,12 +8,15 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const FINDINGS_PATH = path.join(__dirname, "public", "data", "findings.json");
+const REPORTS_PATH = path.join(__dirname, "public", "data", "reports.json");
+const CRAWLER_REPORT_PATH = path.join(__dirname, "crawler_report.json");
+const FINDINGS_PATH = path.join(__dirname, "public", "data", "findings.json"); // legacy
 const STORIES_PATH = path.join(__dirname, "public", "data", "user_stories.json");
 const KB_PATH = path.join(__dirname, "public", "knowledge_base");
 
 // Initialize directories
 async function initDirs() {
+  await fs.mkdir(path.dirname(REPORTS_PATH), { recursive: true }).catch(() => {});
   await fs.mkdir(path.dirname(FINDINGS_PATH), { recursive: true }).catch(() => {});
   await fs.mkdir(path.dirname(STORIES_PATH), { recursive: true }).catch(() => {});
 }
@@ -24,6 +27,39 @@ async function safeWrite(filepath, content) {
   const tmpPath = `${filepath}.${Date.now()}.tmp`;
   await fs.writeFile(tmpPath, content);
   await fs.rename(tmpPath, filepath);
+}
+
+// Helper to add a finding to a report
+async function addFindingToReport(finding) {
+  let reports = [];
+  try {
+    const data = await fs.readFile(REPORTS_PATH, "utf-8");
+    reports = JSON.parse(data);
+  } catch (e) {}
+
+  let url = "Unknown Website";
+  try {
+    const crawlerData = await fs.readFile(CRAWLER_REPORT_PATH, "utf-8");
+    const crawlerReport = JSON.parse(crawlerData);
+    if (crawlerReport.url) url = crawlerReport.url;
+  } catch (e) {}
+
+  // Find a recent report for this URL (created in the last 2 hours)
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+  let report = reports.find(r => r.website === url && new Date(r.createdAt) > twoHoursAgo);
+
+  if (!report) {
+    report = {
+      id: "REP-" + Date.now().toString().slice(-6),
+      website: url,
+      createdAt: new Date().toISOString(),
+      findings: []
+    };
+    reports.unshift(report);
+  }
+
+  report.findings.unshift(finding);
+  await safeWrite(REPORTS_PATH, JSON.stringify(reports, null, 2));
 }
 
 const server = new Server(
@@ -112,9 +148,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     }
     
     else if (request.params.name === "add_he_finding") {
-      const data = await fs.readFile(FINDINGS_PATH, "utf-8").catch(() => "[]");
-      let findings = JSON.parse(data);
-      
       const newFinding = {
         ID: "HE-" + Date.now().toString().slice(-4),
         Type: "UX",
@@ -126,15 +159,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         User_Story_Context: request.params.arguments.User_Story_Context || "Global"
       };
       
-      findings.unshift(newFinding);
-      await safeWrite(FINDINGS_PATH, JSON.stringify(findings, null, 2));
+      await addFindingToReport(newFinding);
       return { content: [{ type: "text", text: `Successfully added HE Finding: ${newFinding.ID}` }] };
     }
 
     else if (request.params.name === "add_functional_bug") {
-      const data = await fs.readFile(FINDINGS_PATH, "utf-8").catch(() => "[]");
-      let findings = JSON.parse(data);
-      
       const newBug = {
         ID: "BUG-" + Date.now().toString().slice(-4),
         Type: "Functional",
@@ -146,8 +175,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         User_Story_Context: request.params.arguments.User_Story_Context || "Global"
       };
       
-      findings.unshift(newBug);
-      await safeWrite(FINDINGS_PATH, JSON.stringify(findings, null, 2));
+      await addFindingToReport(newBug);
       return { content: [{ type: "text", text: `Successfully added Functional Bug: ${newBug.ID}` }] };
     }
     
