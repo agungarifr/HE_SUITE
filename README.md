@@ -11,31 +11,63 @@ HE SUITE is a comprehensive Heuristic Evaluation toolkit built for UI/UX evaluat
 
 ---
 
-## Installation & Usage
+## Step-by-Step Installation (Beginner-Friendly Guide)
 
-You can install `HE_SUITE` globally on your machine directly from GitHub without cloning the repository!
+If you are new to terminal commands, follow these step-by-step instructions carefully to get HE SUITE running on your computer.
 
-### 1. Install Globally
-You can install directly from GitHub (requires Node.js and NPM):
-```bash
-npm install -g github:agungarifr/HE_SUITE --ignore-scripts
-```
+### Step 1: Install Prerequisites
 
-**Alternative Installation (Recommended if GitHub install fails):**
-Clone or download the repository, then install it globally from the folder:
-```bash
-git clone https://github.com/agungarifr/HE_SUITE.git
-cd HE_SUITE
-npm install -g .
-```
+Before you can use HE SUITE, your computer needs **Node.js** and **Git**.
 
-### 2. Start the Application
-Once installed, you can launch the HE SUITE Dashboard from anywhere in your terminal:
-```bash
-he-suite ui
-```
+**For macOS Users:**
+1. Open your **Terminal** app.
+2. Install **Homebrew** (a package manager) by pasting this command and pressing Enter:
+   ```bash
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+   ```
+3. Install Node.js and Git by running:
+   ```bash
+   brew install node git
+   ```
 
-This will automatically start the background server and open your default browser to `http://localhost:8888`.
+**For Windows Users:**
+1. Download and install **Node.js** from [nodejs.org](https://nodejs.org/). (Choose the LTS version and keep clicking 'Next' during installation).
+2. Download and install **Git** from [git-scm.com](https://git-scm.com/).
+3. Once installed, open the **Git Bash** app (search for it in your Windows Start menu). You will run all commands below inside Git Bash.
+
+---
+
+### Step 2: Download & Install HE SUITE
+
+The most stable way to install HE SUITE is to download the files locally to your computer first.
+
+1. In your Terminal (or Git Bash), download the project by running:
+   ```bash
+   git clone https://github.com/agungarifr/HE_SUITE.git
+   ```
+2. Enter the folder you just downloaded:
+   ```bash
+   cd HE_SUITE
+   ```
+3. Install the application globally to your system:
+   ```bash
+   npm install -g .
+   ```
+   *(Note: This might take a few minutes as it downloads necessary components like Chromium for the crawler).*
+
+---
+
+### Step 3: Run HE SUITE
+
+Once the installation is completely finished, you can run the application from **anywhere** on your computer.
+
+1. Type the following command and press Enter:
+   ```bash
+   he-suite ui
+   ```
+2. The internal server will start, and your default web browser will automatically open the Dashboard at `http://localhost:8888`.
+
+You are now ready to use HE SUITE!
 
 ### Additional Commands
 
