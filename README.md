@@ -53,11 +53,15 @@ The most stable way to install HE SUITE is to download the files locally to your
    ```bash
    npm install
    ```
-4. Install aplikasi secara global ke sistem Anda:
+4. Izinkan Puppeteer (crawler browser) untuk mengunduh Chromium:
+   ```bash
+   npm approve-scripts puppeteer
+   ```
+   *(Langkah ini diperlukan agar fitur `he-suite HE <url>` dapat bekerja. Proses ini akan mengunduh browser Chromium dan membutuhkan beberapa menit.)*
+5. Install aplikasi secara global ke sistem Anda:
    ```bash
    npm install -g .
    ```
-   *(Note: This might take a few minutes as it downloads necessary components like Chromium for the crawler).*
 
 ---
 
