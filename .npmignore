@@ -1,0 +1,8 @@
+.git
+.agents
+.cursor
+.cline
+crawler_screenshot.png
+crawler_report.json
+*.log
+node_modules
