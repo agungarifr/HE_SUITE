@@ -6,19 +6,19 @@ export default function HEChat() {
   const [statusLog, setStatusLog] = useState([]);
   const [aiStream, setAiStream] = useState('');
 
-  // Active or selected report
+  // Active or selected report (can be null if user chooses not to show history)
   const [activeReport, setActiveReport] = useState(null);
   const [reportsList, setReportsList] = useState([]);
 
   const statusEndRef = useRef(null);
 
-  const fetchReports = async () => {
+  const fetchReports = async (selectLatest = false) => {
     try {
       const res = await fetch('/api/he/reports');
       if (res.ok) {
         const data = await res.json();
         setReportsList(data);
-        if (data.length > 0 && !activeReport) {
+        if (selectLatest && data.length > 0) {
           setActiveReport(data[0]);
         }
       }
@@ -28,19 +28,20 @@ export default function HEChat() {
   };
 
   useEffect(() => {
-    fetchReports();
+    // Initial fetch, load reports list
+    fetchReports(false);
   }, []);
 
   useEffect(() => {
     statusEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [statusLog]);
+  }, [statusLog, aiStream]);
 
   const handleStartEvaluation = async (e) => {
     e?.preventDefault();
     if (!prompt.trim() || evaluating) return;
 
     setEvaluating(true);
-    setStatusLog(['Memulai proses evaluasi heuristik...']);
+    setStatusLog(['[Sistem] Menginisialisasi proses evaluasi heuristik...']);
     setAiStream('');
 
     try {
@@ -77,7 +78,7 @@ export default function HEChat() {
                 setAiStream(prev => prev + event.data);
               } else if (event.type === 'done') {
                 setActiveReport(event.data.report);
-                await fetchReports();
+                await fetchReports(false);
               } else if (event.type === 'error') {
                 setStatusLog(prev => [...prev, `[ERROR] ${event.data}`]);
               }
@@ -109,146 +110,226 @@ export default function HEChat() {
   };
 
   const examplePrompts = [
-    'lakukan he untuk website https://news.ycombinator.com, dengan case: membaca berita, navigasi komentar, search berita',
-    'lakukan he untuk website https://github.com, dengan case: pencarian repo, login form, profil pengguna'
+    'lakukan he untuk website https://news.ycombinator.com, dengan case: membaca berita, navigasi komentar, search',
+    'lakukan he untuk website https://github.com, dengan case: login form, pencarian repo, profil akun'
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20, height: '100%' }}>
-      {/* Top Banner with Controls */}
-      <div className="nes-container is-dark with-title">
-        <p className="title" style={{ fontSize: 10, background: '#212529', padding: '0 8px' }}>EVALUASI HEURISTIK (HE CHAT)</p>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
-          <div>
-            <p style={{ margin: 0, fontSize: 13, color: 'var(--nes-text-muted)' }}>
-              Ketik prompt audit website & use cases. Model AI akan merayapi DOM dan mengevaluasi pelanggaran heuristik.
-            </p>
-          </div>
+      {/* Top Banner Header */}
+      <div className="nes-container is-dark with-title" style={{ padding: '14px 20px' }}>
+        <p className="title" style={{ fontSize: 10, background: '#212529', padding: '0 8px' }}>
+          EVALUASI HEURISTIK (HE CHAT)
+        </p>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--nes-text-muted)', fontFamily: 'Inter, sans-serif' }}>
+          Ketik instruksi audit di chat box. AI Agent akan menelusuri DOM website secara otomatis, mencocokkan dengan aturan Second Brain, dan menyajikan tabel temuan.
+        </p>
+      </div>
 
-          {/* History Selector & Export Buttons */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 10, color: 'var(--nes-warning)' }} className="nes-font">RIWAYAT:</span>
-            <div className="nes-select is-dark" style={{ width: 'auto', minWidth: 260 }}>
+      {/* Grid: Chat Box & Log Chat AI (Ukuran & Proporsi Seimbang) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 20 }}>
+        {/* BOX 1: CHAT BOX (TEBAL & LEGA) */}
+        <div
+          className="nes-container is-dark with-title"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: 280,
+            padding: '16px 18px'
+          }}
+        >
+          <p className="title" style={{ fontSize: 9, background: '#212529', padding: '0 8px' }}>
+            CHAT BOX: INPUT PERINTAH EVALUASI
+          </p>
+
+          <form onSubmit={handleStartEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+            <textarea
+              className="nes-textarea is-dark"
+              rows={5}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              disabled={evaluating}
+              placeholder="Contoh: lakukan he untuk website https://tokopedia.com, dengan case: login, lupa password, pencarian produk, checkout..."
+              style={{
+                flex: 1,
+                minHeight: 130,
+                fontSize: 13,
+                fontFamily: 'Inter, sans-serif',
+                lineHeight: 1.5,
+                resize: 'none',
+                padding: '12px'
+              }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 10, color: 'var(--nes-text-muted)', fontFamily: 'Inter, sans-serif' }}>Contoh:</span>
+                {examplePrompts.map((p, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className="nes-btn"
+                    onClick={() => setPrompt(p)}
+                    disabled={evaluating}
+                    style={{ fontSize: 8, padding: '3px 8px' }}
+                  >
+                    Preset {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                className="nes-btn is-primary"
+                disabled={evaluating || !prompt.trim()}
+                style={{ fontSize: 10, padding: '8px 16px', whiteSpace: 'nowrap' }}
+              >
+                {evaluating ? 'MENELUSURI...' : 'MULAI HE'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* BOX 2: LOG CHAT DENGAN AI (UKURAN SAMA PERSIS DENGAN CHAT BOX) */}
+        <div
+          className="nes-container is-dark with-title"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 280,
+            padding: '16px 18px'
+          }}
+        >
+          <p className="title" style={{ fontSize: 9, background: '#212529', padding: '0 8px' }}>
+            LOG CHAT DENGAN AI AGENT
+          </p>
+
+          <div
+            style={{
+              flex: 1,
+              background: '#15181c',
+              border: '2px solid #000',
+              padding: '12px 14px',
+              overflowY: 'auto',
+              maxHeight: 210,
+              fontFamily: "'Courier New', Courier, monospace",
+              fontSize: 12,
+              lineHeight: 1.6
+            }}
+          >
+            {statusLog.length === 0 && !aiStream && (
+              <div style={{ color: 'var(--nes-text-muted)', fontFamily: 'Inter, sans-serif', fontSize: 12, lineHeight: 1.6 }}>
+                <div style={{ color: 'var(--nes-warning)', fontWeight: 700, marginBottom: 6 }}>
+                  [AI AGENT STANDBY]
+                </div>
+                <div>• Crawler Puppeteer siap menelusuri DOM & mendeteksi error console.</div>
+                <div>• Memori Second Brain siap diinjeksi sebagai standar heuristik.</div>
+                <div style={{ marginTop: 8, color: '#94a3b8' }}>
+                  Ketik URL & use case pada chat box di sebelah, lalu klik <strong>MULAI HE</strong>.
+                </div>
+              </div>
+            )}
+
+            {/* Status Steps */}
+            {statusLog.map((log, idx) => (
+              <div
+                key={idx}
+                style={{
+                  color: log.includes('[ERROR]') || log.includes('[GAGAL]') ? 'var(--nes-error)' : '#38bdf8',
+                  marginBottom: 4,
+                  wordBreak: 'break-word'
+                }}
+              >
+                &gt; {log}
+              </div>
+            ))}
+
+            {/* Streaming Text Delta */}
+            {aiStream && (
+              <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px dashed #334155', color: '#f1f5f9', whiteSpace: 'pre-wrap' }}>
+                {aiStream}
+              </div>
+            )}
+            <div ref={statusEndRef} />
+          </div>
+        </div>
+      </div>
+
+      {/* SELECTOR RIWAYAT (DITARUH TEPAT DI BAWAH LOG CHAT & CHAT BOX) */}
+      <div className="nes-container is-dark with-title">
+        <p className="title" style={{ fontSize: 9, background: '#212529', padding: '0 8px' }}>
+          SELECTOR RIWAYAT LAPORAN
+        </p>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+          {/* Dropdown Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 320 }}>
+            <span style={{ fontSize: 9, color: 'var(--nes-warning)' }} className="nes-font">PILIH RIWAYAT:</span>
+            <div className="nes-select is-dark" style={{ flex: 1, maxWidth: 540 }}>
               <select
                 value={activeReport?.id || ''}
                 onChange={(e) => {
-                  const found = reportsList.find(r => r.id === e.target.value);
-                  if (found) setActiveReport(found);
+                  const val = e.target.value;
+                  if (!val) {
+                    setActiveReport(null);
+                  } else {
+                    const found = reportsList.find(r => r.id === val);
+                    setActiveReport(found || null);
+                  }
                 }}
-                style={{ fontSize: 12 }}
+                style={{ fontSize: 12, fontFamily: 'Inter, sans-serif' }}
               >
-                {reportsList.length === 0 ? (
-                  <option value="">Belum ada riwayat</option>
-                ) : (
-                  reportsList.map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.id} - {r.website} ({new Date(r.createdAt).toLocaleDateString()})
-                    </option>
-                  ))
-                )}
+                <option value="">-- JANGAN TAMPILKAN RIWAYAT APAPUN (KOSONGKAN) --</option>
+                {reportsList.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.id} - {r.website} ({new Date(r.createdAt).toLocaleDateString()}) • {(r.findings || []).length} Temuan
+                  </option>
+                ))}
               </select>
             </div>
 
+            {/* Tombol Tutup / Kosongkan Riwayat */}
             {activeReport && (
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  type="button"
-                  className="nes-btn is-success"
-                  onClick={() => handleExportExcel(activeReport.id)}
-                  title="Unduh File Excel (.xlsx)"
-                  style={{ fontSize: 9, padding: '4px 10px' }}
-                >
-                  EXCEL
-                </button>
-                <button
-                  type="button"
-                  className="nes-btn"
-                  onClick={() => handleExportJson(activeReport)}
-                  title="Unduh JSON"
-                  style={{ fontSize: 9, padding: '4px 10px' }}
-                >
-                  JSON
-                </button>
-              </div>
+              <button
+                type="button"
+                className="nes-btn is-error"
+                onClick={() => setActiveReport(null)}
+                style={{ fontSize: 8, padding: '4px 10px', whiteSpace: 'nowrap' }}
+                title="Sembunyikan laporan"
+              >
+                TUTUP RIWAYAT
+              </button>
             )}
           </div>
-        </div>
-      </div>
 
-      {/* Input Prompt Box */}
-      <div className="nes-container is-dark with-title">
-        <p className="title" style={{ fontSize: 9, background: '#212529', padding: '0 8px' }}>INPUT PERINTAH EVALUASI</p>
-        <form onSubmit={handleStartEvaluation} style={{ display: 'flex', gap: 12 }}>
-          <input
-            type="text"
-            className="nes-input is-dark"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            disabled={evaluating}
-            placeholder="Contoh: lakukan he untuk website tokopedia.com, dengan case: login, lupa password, register"
-            style={{ flex: 1, fontSize: 13 }}
-          />
-          <button
-            type="submit"
-            className="nes-btn is-primary"
-            disabled={evaluating || !prompt.trim()}
-            style={{ fontSize: 10, whiteSpace: 'nowrap' }}
-          >
-            {evaluating ? 'MENELUSURI...' : 'MULAI HE'}
-          </button>
-        </form>
-
-        {/* Example Prompt Chips */}
-        <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: 'var(--nes-text-muted)' }}>Contoh prompt:</span>
-          {examplePrompts.map((p, i) => (
-            <button
-              key={i}
-              type="button"
-              className="nes-btn"
-              onClick={() => setPrompt(p)}
-              disabled={evaluating}
-              style={{ fontSize: 9, padding: '2px 8px' }}
-            >
-              {p.slice(0, 52)}...
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Live Status Log */}
-      {evaluating && (
-        <div className="nes-container is-dark is-rounded" style={{ maxHeight: 150, overflowY: 'auto', padding: '12px 16px' }}>
-          <p className="nes-font" style={{ fontSize: 9, color: 'var(--nes-warning)', margin: '0 0 8px 0' }}>
-            STATUS PENELUSURAN REAL-TIME:
-          </p>
-          {statusLog.map((log, idx) => (
-            <div key={idx} style={{ fontSize: 12, color: log.includes('[ERROR]') ? 'var(--nes-error)' : 'var(--nes-text-muted)', margin: '3px 0' }}>
-              &gt; {log}
+          {/* Export Buttons (Muncul jika ada laporan yang dipilih) */}
+          {activeReport && (
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <button
+                type="button"
+                className="nes-btn is-success"
+                onClick={() => handleExportExcel(activeReport.id)}
+                title="Unduh File Excel (.xlsx)"
+                style={{ fontSize: 9, padding: '6px 12px' }}
+              >
+                EKSPOR EXCEL
+              </button>
+              <button
+                type="button"
+                className="nes-btn"
+                onClick={() => handleExportJson(activeReport)}
+                title="Unduh JSON"
+                style={{ fontSize: 9, padding: '6px 12px' }}
+              >
+                EKSPOR JSON
+              </button>
             </div>
-          ))}
-          <div ref={statusEndRef} />
+          )}
         </div>
-      )}
+      </div>
 
-      {/* Streaming Narrative Box */}
-      {evaluating && aiStream && (
-        <div className="nes-container is-dark with-title">
-          <p className="title" style={{ fontSize: 9, background: '#212529', padding: '0 8px' }}>OUTPUT AI (STREAMING)</p>
-          <div style={{
-            whiteSpace: 'pre-wrap',
-            fontFamily: "'Courier New', Courier, monospace",
-            fontSize: 13,
-            lineHeight: 1.6,
-            maxHeight: 220,
-            overflowY: 'auto'
-          }}>
-            {aiStream}
-          </div>
-        </div>
-      )}
-
-      {/* Active Findings Report */}
+      {/* ACTIVE FINDINGS REPORT OR EMPTY STATE */}
       {activeReport ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Header Stats Box */}
@@ -380,13 +461,14 @@ export default function HEChat() {
           </div>
         </div>
       ) : (
-        <div className="nes-container is-dark is-rounded" style={{ padding: 40, textAlign: 'center', color: 'var(--nes-text-muted)' }}>
-          <i className="nes-icon is-large heart is-empty" style={{ margin: '0 auto 16px', display: 'block' }}></i>
-          <p className="nes-font" style={{ fontSize: 12, color: 'var(--nes-warning)', margin: '0 0 8px 0' }}>
-            BELUM ADA EVALUASI AKTIF
+        /* Empty state saat user memilih tidak menampilkan riwayat apapun */
+        <div className="nes-container is-dark is-rounded" style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--nes-text-muted)' }}>
+          <i className="nes-icon is-medium heart is-empty" style={{ margin: '0 auto 12px', display: 'block' }}></i>
+          <p className="nes-font" style={{ fontSize: 10, color: 'var(--nes-warning)', margin: '0 0 8px 0' }}>
+            TIDAK ADA RIWAYAT YANG DITAMPILKAN
           </p>
-          <p style={{ margin: 0, fontSize: 13 }}>
-            Ketik URL website dan skenario use cases di kotak atas untuk memulai penelusuran heuristik.
+          <p style={{ margin: 0, fontSize: 12, fontFamily: 'Inter, sans-serif' }}>
+            Pilih laporan dari dropdown <strong>PILIH RIWAYAT</strong> di atas, atau masukkan instruksi di chat box untuk memulai audit baru.
           </p>
         </div>
       )}

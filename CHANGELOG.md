@@ -6,6 +6,16 @@
 ## [Unreleased] — branch `mini`
 > Target version: `2.0.0`
 
+### [2026-10-27T15:32:00+07:00] HEChat Layout Redesign: Spacious Chat Box, Symmetrical AI Log, & Flexible History Selector
+- [FE/UX] **Chat Box Dipertebal & Diperlega**: Mengganti input single-line menjadi textarea 5-baris dengan padding tebal, font Inter 13px, dan min-height 280px container, memberikan ruang leluasa untuk mengetik URL panjang dan skenario use cases.
+- [FE/UX] **Ukuran Log Chat AI Disamakan**: Menyelaraskan ukuran container Log Chat AI dengan Chat Box secara simetris dalam grid seimbang (min-height 280px), menampilkan status crawler real-time dan live AI streaming dengan font terminal yang rapi.
+- [FE/UX] **Selector Riwayat Dipindahkan ke Bawah Log Chat**: Menggeser selector riwayat dari banner atas ke bawah grid chat box & log chat, menciptakan alur visual yang alami (Input → Log AI → Riwayat & Ekspor → Tabel Temuan).
+- [FE/UX] **Opsi Kosongkan / Sembunyikan Riwayat**:
+  - Menambahkan opsi eksplisit `-- JANGAN TAMPILKAN RIWAYAT APAPUN (KOSONGKAN) --` pada dropdown selector riwayat.
+  - Menambahkan tombol cepat `TUTUP RIWAYAT` untuk menyembunyikan laporan kapan saja.
+  - Menampilkan status kosong yang informatif saat tidak ada riwayat yang dipilih.
+
+
 ### [2026-10-27T14:45:00+07:00] Transformation: Knowledge Base → Second Brain & Cloud Permission Fix
 - [FE/BE] **Second Brain Architecture**:
   - Mengubah Knowledge Base pasif menjadi **Second Brain** aktif dan terstruktur.
