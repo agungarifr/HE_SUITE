@@ -1,116 +1,116 @@
-# HE SUITE
+# HE SUITE (Branch: `mini`)
 
-HE SUITE is a comprehensive Heuristic Evaluation toolkit built for UI/UX evaluation and reporting. It features a standalone Web Dashboard, persistent Web Terminal integration, and AI-driven automation (like Freebuff CLI).
-
-## Features
-
-- **Web Dashboard**: An interactive, side-by-side view of your Evaluation Reports and detailed findings.
-- **Persistent Web Terminal**: A built-in terminal that stays active in the background even if you close the tab, keeping your AI agent (Freebuff) alive with its memory intact.
-- **Automated AI Rules**: Built-in rules that prevent the AI from taking destructive actions on your server.
-- **Instant Usage**: Completely standalone installation via GitHub.
+HE SUITE adalah platform **Heuristic Evaluation & UI/UX Audit** berbasis AI dengan antarmuka retro 8-bit (NES.css). Dilengkapi dengan:
+1. **Evaluasi HE (Chat Box)**: Evaluasi website otomatis via prompt bebas dengan ekstraksi test cases otomatis, crawler Puppeteer, streaming AI, tabel temuan terstruktur, dan ekspor Excel (`.xlsx`) / JSON.
+2. **Knowledge Base CMS**: Upload pedoman audit (PPT, PPTX, PDF, DOCX, TXT, MD) untuk memperkaya analisis RAG model AI, dilengkapi modal pratinjau teks in-app.
+3. **Model AI & API Key CMS**: Konfigurasi OpenAI-compatible provider (OpenAI, Groq, Ollama, OpenRouter, dll.) dengan preset 1-klik dan live connection test.
 
 ---
 
-## Step-by-Step Installation (Beginner-Friendly Guide)
+## ⚡ Panduan Instalasi Cepat (Quick Start)
 
-If you are new to terminal commands, follow these step-by-step instructions carefully to get HE SUITE running on your computer.
-
-### Step 1: Install Prerequisites
-
-Before you can use HE SUITE, your computer needs **Node.js** and **Git**.
-
-**For macOS Users:**
-1. Open your **Terminal** app.
-2. Install **Homebrew** (a package manager) by pasting this command and pressing Enter:
-   ```bash
-   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-   ```
-3. Install Node.js and Git by running:
-   ```bash
-   brew install node git
-   ```
-
-**For Windows Users:**
-1. Download and install **Node.js** from [nodejs.org](https://nodejs.org/). (Choose the LTS version and keep clicking 'Next' during installation).
-2. Download and install **Git** from [git-scm.com](https://git-scm.com/).
-3. Once installed, open the **Git Bash** app (search for it in your Windows Start menu). You will run all commands below inside Git Bash.
+### 1. Prasyarat
+- Komputer terpasang **Node.js** (versi 18 ke atas) & **Git**.
+  - Download Node.js: [nodejs.org](https://nodejs.org/) (pilih versi LTS)
+  - Download Git: [git-scm.com](https://git-scm.com/)
 
 ---
 
-### Step 2: Download & Install HE SUITE
+### 2. Download Branch `mini`
 
-The most stable way to install HE SUITE is to download the files locally to your computer first.
+Buka **Terminal** (Mac/Linux) atau **PowerShell / Git Bash / Command Prompt** (Windows), lalu jalankan:
 
-1. In your Terminal (or Git Bash), download the project by running:
-   ```bash
-   git clone https://github.com/agungarifr/HE_SUITE.git
-   ```
-2. Enter the folder you just downloaded:
-   ```bash
-   cd HE_SUITE
-   ```
-3. Install semua dependensi yang dibutuhkan:
-   ```bash
-   npm install
-   ```
-4. Izinkan Puppeteer (crawler browser) untuk mengunduh Chromium:
-   ```bash
-   npm approve-scripts puppeteer
-   ```
-   *(Langkah ini diperlukan agar fitur `he-suite HE <url>` dapat bekerja. Proses ini akan mengunduh browser Chromium dan membutuhkan beberapa menit.)*
-5. Install aplikasi secara global ke sistem Anda:
-   ```bash
-   npm install -g .
-   ```
-
----
-
-### Step 3: Run HE SUITE
-
-Once the installation is completely finished, you can run the application from **anywhere** on your computer.
-
-1. Type the following command and press Enter:
-   ```bash
-   he-suite ui
-   ```
-2. The internal server will start, and your default web browser will automatically open the Dashboard at `http://localhost:8888`.
-
-You are now ready to use HE SUITE!
-
-### Additional Commands
-
-- `he-suite mcp`: Start the MCP server manually.
-- `he-suite HE <url>`: Run the Heuristic Evaluation Crawler on a specific URL.
-
----
-
-## Architecture
-
-HE SUITE now operates as a Production-Ready application:
-- **UI**: The React dashboard is pre-built and served directly by the `api.js` Express server.
-- **Sessions**: The Web Terminal session runs as a background process so you can switch tabs or close the dashboard without losing your agent's context.
-
-*Note: For the Freebuff AI integration to work out of the box in the Web Terminal, make sure `freebuff` is installed globally on your machine.*
-
----
-
-## Troubleshooting
-
-If you encounter errors during the global installation (`npm install -g`), check these common issues:
-
-### 1. `ENOTDIR: not a directory, rename...`
-**Cause:** This happens if you previously used `npm link` on an older version of `he-suite`, leaving a broken symlink in your global `node_modules` folder. NPM tries to overwrite it but fails.
-**Solution:** Find and remove the broken symlink or folder manually. For example on macOS/Homebrew:
 ```bash
-rm -rf /opt/homebrew/lib/node_modules/he-suite
-# Then run install again:
-npm install -g github:agungarifr/HE_SUITE
+# Clone khusus branch mini
+git clone -b mini https://github.com/agungarifr/HE_SUITE.git
+
+# Masuk ke direktori project
+cd HE_SUITE
 ```
 
-### 2. `spawn sh ENOENT` (Puppeteer Installation Error)
-**Cause:** This is a known macOS/NPM bug where NPM fails to find the shell (`sh`) when running `postinstall` scripts (like downloading Chromium for Puppeteer) directly from a GitHub repository installation.
-**Solution:** Clear your npm cache and bypass the scripts using `--ignore-scripts`:
+*(Atau via browser: kunjungi https://github.com/agungarifr/HE_SUITE/tree/mini lalu klik tombol hijau **Code** -> **Download ZIP**, ekstrak filenya, lalu buka foldernya di terminal).*
+
+---
+
+### 3. Install Dependensi & Jalankan
+
 ```bash
-npm cache clean --force
-npm install -g github:agungarifr/HE_SUITE --ignore-scripts
+# 1. Install semua package yang dibutuhkan
+npm install
+
+# 2. Build aset frontend (opsional jika sudah ada dist/)
+npm run build
+
+# 3. Jalankan server HE SUITE
+npm start
 ```
+
+Aplikasi akan aktif di:
+👉 **`http://localhost:8888`**
+
+Buka link tersebut di browser Anda (Chrome, Edge, Firefox, Safari).
+
+---
+
+## 🤖 Menggunakan Google Gemini Web Sebagai Asisten Instalasi (Untuk Pemula)
+
+Bagi pengguna baru (*new user*) yang belum terbiasa dengan terminal atau ragu saat menginstal, Anda bisa memanfaatkan **[Google Gemini Web](https://gemini.google.com)** sebagai pemandu pribadi.
+
+### 💡 Catatan & Batasan Gemini Web:
+- **Yang BISA dilakukan Gemini Web**:
+  - Memberikan panduan langkah demi langkah yang sangat ramah pemula sesuai sistem operasi Anda (Windows, Mac, atau Linux).
+  - Mendiagnosis pesan error (cukup *copy-paste* error dari terminal ke Gemini Web untuk mendapatkan solusinya).
+  - Membantu Anda cara mendapatkan API Key (OpenAI, Groq, dll.) dan cara mengisinya.
+- **Yang TIDAK BISA dilakukan Gemini Web**:
+  - Gemini Web berjalan di cloud browser, sehingga **tidak bisa mengeksekusi perintah terminal langsung di komputer Anda**. Anda tetap perlu membuka Terminal / PowerShell dan menempelkan (*paste*) perintah yang diberikan.
+
+### 📋 Template Prompt untuk Google Gemini Web
+Copy dan paste teks berikut ke chat [Google Gemini Web](https://gemini.google.com):
+
+```text
+Halo Gemini! Saya pemula dan ingin menjalankan project Node.js "HE SUITE" (branch mini) di komputer saya.
+Sistem operasi saya: [Windows 11 / macOS / Ubuntu].
+
+Tolong pandu saya dari awal langkah demi langkah:
+1. Cara mengecek apakah Node.js dan Git sudah terpasang di komputer saya.
+2. Cara mendownload/clone branch `mini` dari repository: https://github.com/agungarifr/HE_SUITE.git
+3. Cara membuka terminal di folder tersebut dan menjalankan `npm install`.
+4. Cara menjalankan server dengan `npm start` sampai bisa dibuka di browser http://localhost:8888.
+
+Tolong berikan perintah satu per satu secara berurutan dan jelaskan apa yang harus saya lakukan. Jika saya menemukan error di terminal, saya akan menempelkan pesan errornya ke sini untuk dibantu.
+```
+
+---
+
+## ⚙️ Konfigurasi Model AI (Di Dalam Aplikasi)
+
+Setelah aplikasi terbuka di `http://localhost:8888`:
+1. Masuk ke tab **MODEL AI & KEY** pada sidebar.
+2. Pilih preset penyedia Anda:
+   - **OpenAI**: Masukkan API Key OpenAI (`sk-...`), model default `gpt-4o-mini`.
+   - **Groq**: Masukkan API Key Groq (`gsk_...`), model `llama-3.3-70b-versatile` (sangat cepat & hemat biaya).
+   - **Ollama (Lokal)**: Tanpa API key, Base URL `http://localhost:11434/v1`, model contoh `llama3`.
+3. Klik **TES KONEKSI**. Jika berhasil, klik **SIMPAN KONFIGURASI**. Konfigurasi tersimpan aman di file `.env`.
+
+---
+
+## 🚀 Menjalankan Evaluasi HE Pertama Anda
+
+1. Buka tab **EVALUASI HE**.
+2. Masukkan instruksi pada chat box, contoh:
+   > `lakukan he untuk website https://example.com, dengan case: login, register, checkout produk`
+3. Klik **MULAI EVALUASI**.
+4. Sistem akan otomatis:
+   - Mengambil tangkapan layar & error DOM menggunakan Puppeteer crawler.
+   - Menggabungkan data dengan pedoman dari Knowledge Base.
+   - Menghasilkan analisis heuristik terperinci melalui AI.
+   - Menampilkan tabel temuan (dipisah antara **Detail Masalah** dan **Rekomendasi Perbaikan**).
+5. Klik **EKSPOR EXCEL (.XLSX)** untuk mengunduh laporan formal.
+
+---
+
+## 📂 Dokumentasi Teknis
+
+- [CHANGELOG.md](file:///c:/Users/game/Desktop/hesuite/CHANGELOG.md) — Riwayat perubahan versi dan pembaruan arsitektur.
+- [ROADMAP.md](file:///c:/Users/game/Desktop/hesuite/ROADMAP.md) — Rencana tahapan rilis dan status fitur.
+- [CODEGRAPH.md](file:///c:/Users/game/Desktop/hesuite/CODEGRAPH.md) — Pemetaan arsitektur komponen, data flow, dan ketergantungan modul.

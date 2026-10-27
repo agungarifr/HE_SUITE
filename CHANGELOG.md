@@ -6,6 +6,11 @@
 ## [Unreleased] — branch `mini`
 > Target version: `2.0.0`
 
+### [2026-10-27T13:51:00+07:00] Documentation Update: Branch Mini & Gemini Web Setup Guide
+- [DOC] **README.md Overhaul**: Menulis ulang `README.md` berfokus pada cara download branch `mini` (`git clone -b mini`), quick start, serta panduan komprehensif bagi pemula untuk menggunakan **Google Gemini Web** sebagai asisten troubleshooting interaktif.
+- [DOC] **Koreksi Kapabilitas Gemini Web**: Menambahkan catatan teknis transparan bahwa Gemini Web adalah pemandu langkah dan pembaca error terminal, bukan eksekutor perintah lokal otomatis.
+
+
 ### [2026-10-27T13:28:15+07:00] Table Split, Horizontal Scroll & UI Polish
 - [FE/UX] **Pemisahan Kolom Temuan HE**: Memisahkan `DETAIL MASALAH` (berisi Judul Masalah & Deskripsi komprehensif) dan `REKOMENDASI PERBAIKAN` (kotak hijau beraksen dengan styling actionable guidance) ke dua kolom terpisah.
 - [FE/UX] **Horizontal Scroll Container**: Mengatur tabel temuan dengan container `overflow-x: auto` dan lebar minimum `min-width: 1300px`, dilengkapi teks panduan "↔ Geser horizontal untuk melihat detail lengkap" agar tabel tidak terpotong dan nyaman dibaca pada semua resolusi layar.
