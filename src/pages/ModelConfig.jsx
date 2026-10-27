@@ -14,6 +14,16 @@ export default function ModelConfig({ onConfigUpdated }) {
 
   const presets = [
     {
+      name: 'DeepSeek',
+      baseUrl: 'https://api.deepseek.com/v1',
+      model: 'deepseek-chat'
+    },
+    {
+      name: 'OpenRouter',
+      baseUrl: 'https://openrouter.ai/api/v1',
+      model: 'openai/gpt-4o-mini'
+    },
+    {
       name: 'Google Gemini (AI Studio)',
       baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
       model: 'gemini-2.0-flash'
