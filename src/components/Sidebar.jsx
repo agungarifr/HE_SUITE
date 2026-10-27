@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function Sidebar({ activeTab, setActiveTab, hasApiKey, kbCount }) {
+export default function Sidebar({ activeTab, setActiveTab, hasApiKey, brainCount }) {
   const menuItems = [
     {
       id: 'he',
@@ -9,9 +9,9 @@ export default function Sidebar({ activeTab, setActiveTab, hasApiKey, kbCount })
       icon: 'coin'
     },
     {
-      id: 'kb',
-      title: 'KNOWLEDGE BASE',
-      sub: `${kbCount} Dokumen Aktif`,
+      id: 'brain',
+      title: 'SECOND BRAIN',
+      sub: `${brainCount ?? 0} Memori Aktif`,
       icon: 'star'
     },
     {

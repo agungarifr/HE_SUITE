@@ -53,7 +53,11 @@ export async function saveConfig({ apiKey, baseUrl, model }) {
   }
 
   const lines = Object.entries(envMap).map(([k, v]) => `${k}=${v}`);
-  await fs.writeFile(envPath, lines.join('\n') + '\n', 'utf-8');
+  try {
+    await fs.writeFile(envPath, lines.join('\n') + '\n', 'utf-8');
+  } catch (err) {
+    console.warn(`[Config Warning] Tidak dapat menulis ke .env (${err.message}). Konfigurasi tetap aktif di memori sesi.`);
+  }
   return getConfig();
 }
 

@@ -29,9 +29,20 @@ export async function runHEEvaluation({ prompt, crawlerData, kbContext, onChunk 
     baseURL: config.baseUrl
   });
 
-  const kbSummary = Object.entries(kbContext || {})
-    .map(([file, content]) => `### ATURAN / GUIDELINE DARI: ${file}\n${content.slice(0, 3000)}`)
-    .join('\n\n');
+  let kbSummary = '';
+  if (kbContext && (kbContext.activeNotes || kbContext.vaultDocs)) {
+    const notesStr = (kbContext.activeNotes || [])
+      .map(n => `### [SECOND BRAIN NOTE] ${n.title} (Tags: ${(n.tags || []).join(', ')})\n${n.content.slice(0, 3500)}`)
+      .join('\n\n');
+    const vaultStr = Object.entries(kbContext.vaultDocs || {})
+      .map(([file, content]) => `### [SECOND BRAIN VAULT] ${file}\n${typeof content === 'string' ? content.slice(0, 3500) : JSON.stringify(content)}`)
+      .join('\n\n');
+    kbSummary = [notesStr, vaultStr].filter(Boolean).join('\n\n');
+  } else {
+    kbSummary = Object.entries(kbContext || {})
+      .map(([file, content]) => `### ATURAN / GUIDELINE DARI: ${file}\n${typeof content === 'string' ? content.slice(0, 3500) : JSON.stringify(content)}`)
+      .join('\n\n');
+  }
 
   const systemPrompt = `Anda adalah Lead UI/UX Evaluator & QA Specialist profesional yang melakukan Heuristic Evaluation (HE) mendalam berdasarkan 10 Heuristik Nielsen, Prinsip WCAG, dan Knowledge Base terlampir.
 

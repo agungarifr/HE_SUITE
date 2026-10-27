@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 
 import configRouter from './api/routes/config.js';
 import kbRouter from './api/routes/kb.js';
+import brainRouter from './api/routes/brain.js';
 import heRouter from './api/routes/he.js';
 
 dotenv.config();
@@ -19,6 +20,7 @@ app.use(express.json());
 
 // API Routes
 app.use('/api/config', configRouter);
+app.use('/api/brain', brainRouter);
 app.use('/api/kb', kbRouter);
 app.use('/api/he', heRouter);
 

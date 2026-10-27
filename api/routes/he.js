@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import * as XLSX from 'xlsx';
 import { runCrawler } from '../services/crawler.js';
-import { getCombinedKnowledgeBase } from '../services/kb-parser.js';
+import { getActiveBrainContext } from '../services/brain.js';
 import { runHEEvaluation, parsePrompt } from '../services/ai.js';
 
 const router = Router();
@@ -124,14 +124,14 @@ router.post('/run', async (req, res) => {
       });
     }
 
-    sendEvent('status', 'Mengumpulkan knowledge base & heuristic guidelines...');
-    const kbContext = await getCombinedKnowledgeBase();
-    sendEvent('status', `Tersedia ${Object.keys(kbContext).length} aturan knowledge base. Memanggil AI model...`);
+    sendEvent('status', 'Mengumpulkan memori aktif dari Second Brain...');
+    const brainContext = await getActiveBrainContext();
+    sendEvent('status', `Terserap ${brainContext.totalActiveNotes} catatan aktif & ${brainContext.totalVaultDocs} dokumen vault dari Second Brain. Memanggil model AI...`);
 
     const result = await runHEEvaluation({
       prompt,
       crawlerData,
-      kbContext,
+      kbContext: brainContext,
       onChunk: (chunk) => sendEvent('chunk', chunk)
     });
 

@@ -6,6 +6,19 @@
 ## [Unreleased] — branch `mini`
 > Target version: `2.0.0`
 
+### [2026-10-27T14:45:00+07:00] Transformation: Knowledge Base → Second Brain & Cloud Permission Fix
+- [FE/BE] **Second Brain Architecture**:
+  - Mengubah Knowledge Base pasif menjadi **Second Brain** aktif dan terstruktur.
+  - Dua tab utama:
+    1. **Catatan & Aturan UX (Brain Notes)**: Form cepat untuk mencatat prinsip UX, aturan bisnis, dan checklist heuristik dengan tag. Dilengkapi tombol **Toggle Aktif/Nonaktif** per catatan untuk menentukan apakah aturan diikutsertakan dalam prompt evaluasi AI.
+    2. **Vault Dokumen**: Penyimpanan dokumen (PPT, PPTX, PDF, DOCX, TXT, MD) dengan ekstraksi teks RAG dan modal pratinjau teks in-app.
+  - **Migrasi Otomatis**: 6 dokumen markdown heuristik inti (Nielsen 10, Shneiderman, WCAG 2.1, Skala Severity, NN/g 5W2H, Custom Prompts) secara otomatis dimigrasikan menjadi catatan Second Brain awal.
+  - **Injeksi AI**: Mesin evaluasi menyerap seluruh Catatan Aktif + Dokumen Vault sebagai konteks cerdas evaluasi.
+- [DOCKER/CLOUD] **Fix EACCES Permission Denied di Render**:
+  - Menambahkan `RUN touch .env && chown -R pptruser:pptruser /app` pada `Dockerfile` agar user `pptruser` memiliki izin tulis penuh pada `.env`, data laporan, dan knowledge base.
+  - Memperbarui `api/services/config.js` dengan proteksi `try...catch` agar kegagalan tulis `.env` pada container *read-only* tidak membuat server crash dan konfigurasi tetap aktif pada memori sesi (`process.env`).
+
+
 ### [2026-10-27T13:51:00+07:00] Documentation Update: Branch Mini & Gemini Web Setup Guide
 - [DOC] **README.md Overhaul**: Menulis ulang `README.md` berfokus pada cara download branch `mini` (`git clone -b mini`), quick start, serta panduan komprehensif bagi pemula untuk menggunakan **Google Gemini Web** sebagai asisten troubleshooting interaktif.
 - [DOC] **Koreksi Kapabilitas Gemini Web**: Menambahkan catatan teknis transparan bahwa Gemini Web adalah pemandu langkah dan pembaca error terminal, bukan eksekutor perintah lokal otomatis.
