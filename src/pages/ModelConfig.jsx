@@ -14,6 +14,11 @@ export default function ModelConfig({ onConfigUpdated }) {
 
   const presets = [
     {
+      name: 'Google Gemini (AI Studio)',
+      baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+      model: 'gemini-2.0-flash'
+    },
+    {
       name: 'OpenAI (GPT-4o)',
       baseUrl: 'https://api.openai.com/v1',
       model: 'gpt-4o'
