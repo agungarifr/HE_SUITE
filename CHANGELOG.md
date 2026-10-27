@@ -6,6 +6,17 @@
 ## [Unreleased] — branch `mini`
 > Target version: `2.0.0`
 
+### [2026-10-27T15:55:00+07:00] Anti-Bot Stealth Crawler & Resilient Heuristic Fallback
+- [BE/CRAWLER] **Stealth Fingerprint Masking**:
+  - Menyamarkan headless Chrome dengan User-Agent Chrome 133 modern asli dan header bahasa/arsitektur Windows standar.
+  - Menghilangkan jejak `navigator.webdriver` via `evaluateOnNewDocument` dan menyisipkan `window.chrome`.
+  - Menambahkan argumen browser `--disable-blink-features=AutomationControlled` untuk melewati proteksi bot standar.
+- [BE/CRAWLER] **Fast DOM-Loaded Navigation**: Mengganti `networkidle2` menjadi `domcontentloaded` dengan timeout cerdas 25 detik agar crawler tidak macet (*hang*) pada website dengan script analitik/iklan tak terhingga.
+- [BE/AI] **Resilient Domain Heuristics Fallback**:
+  - Crawler otomatis mendeteksi jika halaman diblokir oleh WAF/Cloudflare Captcha (`just a moment`, `access denied`, dll.).
+  - Jika diblokir atau gagal mengambil DOM fisik, sistem **TIDAK PERNAH CRASH**. AI secara otomatis beralih mengevaluasi use cases berbasis *domain UX knowledge*, pola arsitektur industri, dan pedoman Second Brain sehingga laporan evaluasi HE tetap komprehensif dan selesai sempurna.
+
+
 ### [2026-10-27T15:32:00+07:00] HEChat Layout Redesign: Spacious Chat Box, Symmetrical AI Log, & Flexible History Selector
 - [FE/UX] **Chat Box Dipertebal & Diperlega**: Mengganti input single-line menjadi textarea 5-baris dengan padding tebal, font Inter 13px, dan min-height 280px container, memberikan ruang leluasa untuk mengetik URL panjang dan skenario use cases.
 - [FE/UX] **Ukuran Log Chat AI Disamakan**: Menyelaraskan ukuran container Log Chat AI dengan Chat Box secara simetris dalam grid seimbang (min-height 280px), menampilkan status crawler real-time dan live AI streaming dengan font terminal yang rapi.

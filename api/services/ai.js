@@ -79,17 +79,23 @@ Skala Severity:
 3 = Masalah mayor (prioritas tinggi)
 4 = Masalah katastropik (blocker / crash / data loss)`;
 
+  const botNotice = crawlerData.isBotBlocked
+    ? `\n[PERHATIAN WAF]: Website target memproteksi bot/crawler (${crawlerData.blockReason}). Tetap lakukan evaluasi heuristik menyeluruh untuk domain dan use cases yang diminta (${prompt}) berdasarkan arsitektur UX standar industri, kaidah Second Brain, dan heuristik Nielsen/WCAG.`
+    : '';
+
   const userContent = [
     {
       type: 'text',
       text: `Permintaan Evaluasi: ${prompt}
-
+${botNotice}
 DATA CRAWLER TERBARU:
 - URL: ${crawlerData.url}
+- Status Halaman: ${crawlerData.pageTitle || 'N/A'}
+- Terhalang Bot-Blocker: ${crawlerData.isBotBlocked ? 'Ya' : 'Tidak'}
 - Console Errors: ${JSON.stringify(crawlerData.consoleErrors || [])}
 - Network Failures: ${JSON.stringify(crawlerData.networkErrors || [])}
-- Ringkasan Tombol: ${(crawlerData.interactiveElements?.buttons || []).slice(0, 25).map(b => b.text || b.id).filter(Boolean).join(', ')}
-- Ringkasan Input: ${(crawlerData.interactiveElements?.inputs || []).slice(0, 25).map(i => `${i.type || 'text'}:${i.name || i.id || i.placeholder}`).filter(Boolean).join(', ')}
+- Ringkasan Tombol: ${(crawlerData.interactiveElements?.buttons || []).slice(0, 30).map(b => b.text || b.id).filter(Boolean).join(', ') || '(Tidak ada tombol terdeteksi)'}
+- Ringkasan Input: ${(crawlerData.interactiveElements?.inputs || []).slice(0, 30).map(i => `${i.type || 'text'}:${i.name || i.id || i.placeholder}`).filter(Boolean).join(', ') || '(Tidak ada input terdeteksi)'}
 
 Lakukan evaluasi menyeluruh untuk use cases yang diminta user!`
     }

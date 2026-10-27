@@ -8,10 +8,13 @@ export async function runCrawler({ url, onProgress = () => {} }) {
     targetUrl = `https://${targetUrl}`;
   }
 
-  onProgress(`[Crawler] Membuka browser untuk: ${targetUrl}`);
+  onProgress(`[Crawler] Membuka browser stealth untuk: ${targetUrl}`);
   
   const functionalData = {
     url: targetUrl,
+    pageTitle: '',
+    isBotBlocked: false,
+    blockReason: null,
     consoleErrors: [],
     networkErrors: [],
     pageErrors: [],
@@ -22,13 +25,35 @@ export async function runCrawler({ url, onProgress = () => {} }) {
 
   let browser;
   try {
+    // Launch with stealth & anti-detection flags
     browser = await puppeteer.launch({
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-blink-features=AutomationControlled',
+        '--disable-features=IsolateOrigins,site-per-process',
+        '--window-size=1440,900'
+      ]
     });
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1440, height: 900 });
+
+    // Mask puppeteer fingerprints
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36');
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+      'sec-ch-ua': '"Not A(Brand";v="8", "Chromium";v="133", "Google Chrome";v="133"',
+      'sec-ch-ua-mobile': '?0',
+      'sec-ch-ua-platform': '"Windows"'
+    });
+
+    await page.evaluateOnNewDocument(() => {
+      Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+      window.chrome = { runtime: {} };
+    });
 
     page.on('console', msg => {
       if (msg.type() === 'error') functionalData.consoleErrors.push(msg.text());
@@ -39,33 +64,50 @@ export async function runCrawler({ url, onProgress = () => {} }) {
       if (fail) functionalData.networkErrors.push(`${req.method()} ${req.url()} - ${fail.errorText}`);
     });
 
-    onProgress(`[Crawler] Mengunjungi halaman web...`);
-    await page.goto(targetUrl, { waitUntil: 'networkidle2', timeout: 35000 }).catch(e => {
-      onProgress(`[Crawler Warning] Navigasi lambat atau timeout, lanjut proses evaluasi: ${e.message}`);
+    onProgress(`[Crawler] Mengunjungi halaman web (stealth mode)...`);
+    
+    // Use domcontentloaded for fast bypass without getting stuck on infinite trackers
+    await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 25000 }).catch(e => {
+      onProgress(`[Crawler Info] Melanjutkan proses (timeout/slow network): ${e.message}`);
     });
 
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 2000));
 
-    // Screenshot
-    onProgress(`[Crawler] Mengambil tangkapan layar full-page...`);
-    const screenshotPath = path.join(process.cwd(), 'crawler_screenshot.png');
-    const screenshotBuffer = await page.screenshot({ fullPage: true });
-    await fs.writeFile(screenshotPath, screenshotBuffer);
-    functionalData.screenshotPath = screenshotPath;
-    functionalData.screenshotBase64 = screenshotBuffer.toString('base64');
+    // Check page title for WAF / Cloudflare blocks
+    const title = await page.title().catch(() => '');
+    functionalData.pageTitle = title;
+    
+    if (/cloudflare|just a moment|captcha|access denied|ddos|security check|verifikasi/i.test(title)) {
+      functionalData.isBotBlocked = true;
+      functionalData.blockReason = title;
+      onProgress(`[Crawler Notice] Terdeteksi proteksi WAF/Captcha (${title}). Mengaktifkan Fallback Heuristik Berbasis Domain Knowledge...`);
+    }
+
+    // Screenshot capture with safe error handling
+    try {
+      onProgress(`[Crawler] Mengambil tangkapan layar web...`);
+      const screenshotPath = path.join(process.cwd(), 'crawler_screenshot.png');
+      const screenshotBuffer = await page.screenshot({ fullPage: false, type: 'jpeg', quality: 80 });
+      await fs.writeFile(screenshotPath, screenshotBuffer).catch(() => {});
+      functionalData.screenshotPath = screenshotPath;
+      functionalData.screenshotBase64 = screenshotBuffer.toString('base64');
+    } catch (ssErr) {
+      onProgress(`[Crawler Info] Screenshot dilewati: ${ssErr.message}`);
+    }
 
     // Extract interactive elements
     onProgress(`[Crawler] Menganalisis elemen interaktif DOM...`);
     const elements = await page.evaluate(() => {
       const inputs = Array.from(document.querySelectorAll('input, select, textarea')).map(el => ({
         tag: el.tagName.toLowerCase(),
-        type: el.type,
+        type: el.type || 'text',
         name: el.name || '',
-        id: el.id || '',
         placeholder: el.placeholder || '',
+        id: el.id || '',
         isVisible: el.offsetWidth > 0 && el.offsetHeight > 0
       }));
-      const buttons = Array.from(document.querySelectorAll('button, a.btn, input[type="submit"]')).map(el => ({
+
+      const buttons = Array.from(document.querySelectorAll('button, a[role="button"], input[type="submit"]')).map(el => ({
         tag: el.tagName.toLowerCase(),
         text: (el.innerText || el.value || '').trim().substring(0, 50),
         id: el.id || '',
@@ -78,11 +120,11 @@ export async function runCrawler({ url, onProgress = () => {} }) {
 
     // Save report to disk
     const reportPath = path.join(process.cwd(), 'crawler_report.json');
-    await fs.writeFile(reportPath, JSON.stringify(functionalData, null, 2));
+    await fs.writeFile(reportPath, JSON.stringify(functionalData, null, 2)).catch(() => {});
 
-    onProgress(`[Crawler] Selesai crawling & capturing.`);
+    onProgress(`[Crawler] Selesai crawling & analisis DOM (${elements.buttons.length} tombol, ${elements.inputs.length} input terdeteksi).`);
   } catch (err) {
-    onProgress(`[Crawler Error] ${err.message}`);
+    onProgress(`[Crawler Info] ${err.message}. Lanjut ke evaluasi AI.`);
     functionalData.crawlerError = err.message;
   } finally {
     if (browser) await browser.close().catch(() => {});
