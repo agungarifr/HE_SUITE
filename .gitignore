@@ -44,3 +44,7 @@ mcp_settings.json
 .mcp_pid
 .vite_pid
 .he_suite.log
+
+# Environment & secrets
+.env
+.env.*

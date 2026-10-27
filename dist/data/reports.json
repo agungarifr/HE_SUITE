@@ -1,5 +1,184 @@
 [
   {
+    "id": "REP-284220",
+    "website": "https://digitalpass.id",
+    "createdAt": "2026-10-27T05:34:44.220Z",
+    "prompt": "he website https://digitalpass.id/, coba login, lupa password, dan explore halaman dashboard/landing sebelum coba login",
+    "summary": "Evaluasi DigitalPass.id pada use case eksplorasi landing pra-login, login, dan lupa password menemukan 17 isu. Klaster utama: (1) kegagalan aset visual senyap akibat ERR_BLOCKED_BY_ORB pada gambar kegiatan dari bucket OSS Aliyun tanpa fallback atau notifikasi; (2) ambiguitas entry point autentikasi — dua CTA 'Ajukan Layanan' identik, tidak ada jalur registrasi, tidak ada penjelasan metode login, dan tidak ada tautan 'Lupa Password' pada titik masuk; (3) ketiadaan pencarian/filter pada katalog layanan serta absennya loading/error state dan skip-link. Console error bersih (0), namun GA4 terblokir (ERR_ABORTED) sehingga data analitik bias. Halaman /login dan /forgot-password tidak ter-crawl sehingga temuannya ditandai sebagai risiko yang perlu diverifikasi.",
+    "findings": [
+      {
+        "ID": "HE-01",
+        "Type": "Functional",
+        "Severity": 3,
+        "Heuristic_Type": "Visibility of System Status (Nielsen H1) / Perceivable (WCAG 1.1.1)",
+        "Issue_Title": "Gambar konten kegiatan gagal dimuat akibat ERR_BLOCKED_BY_ORB dan gagal secara senyap",
+        "Description": "Request GET https://dtp-digitalpass-prod.oss-ap-southeast-5.aliyuncs.com/kegiatan/kegiatan-20240715102645.png diblokir Chromium dengan net::ERR_BLOCKED_BY_ORB. Penyebabnya bukan jaringan pengguna, melainkan konfigurasi bucket OSS Aliyun (Content-Type tidak sesuai untuk file .png, X-Content-Type-Options: nosniff, atau header CORS yang salah). Dampaknya area gambar pada section kegiatan tampil kosong/rusak pada semua pengguna berbasis Chromium, tanpa pesan apa pun ke pengguna bahwa konten gagal dimuat.",
+        "Recommendation": "Set Content-Type objek menjadi image/png dan tambahkan header CORS yang tepat pada bucket OSS. Untuk jangka panjang, sajikan aset melalui CDN berdomain sendiri (mis. cdn.digitalpass.id) agar konsisten dengan CSP dan tidak bergantung pada kebijakan ORB browser. Tambahkan monitoring 4xx/blocked pada aset kritis.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-02",
+        "Type": "UX",
+        "Severity": 3,
+        "Heuristic_Type": "Perceivable - Text Alternatives (WCAG 1.1.1) / Help Users Recognize Errors (H9)",
+        "Issue_Title": "Tidak ada text alternative maupun fallback untuk gambar eksternal yang gagal render",
+        "Description": "Gambar yang gagal dimuat tidak digantikan oleh placeholder, ikon, maupun alt text deskriptif yang bermakna. Pengguna screen reader kehilangan konteks section kegiatan sepenuhnya, sementara pengguna visual melihat ruang kosong tanpa penjelasan. Tidak ditemukan handler onerror yang menampilkan fallback.",
+        "Recommendation": "Tambahkan atribut alt deskriptif pada setiap gambar konten, serta handler onerror yang menampilkan placeholder (mis. kartu abu-abu dengan label 'Gambar tidak tersedia') dan mencatat kegagalan ke error monitoring.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-03",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Consistency and Standards (Nielsen H4) / Shneiderman #1 Strive for Consistency",
+        "Issue_Title": "Duplikasi label CTA 'Ajukan Layanan' tanpa pembeda konteks",
+        "Description": "Terdapat dua tombol berlabel persis 'Ajukan Layanan' pada halaman landing (kemungkinan header dan hero), tanpa label pendukung yang membedakan tujuan keduanya. Pengguna tidak dapat memprediksi apakah keduanya mengarah ke halaman yang sama atau ke alur layanan yang berbeda, sehingga menimbulkan keraguan sebelum mengklik.",
+        "Recommendation": "Pertahankan satu CTA primer per layar, atau beri pembeda konteks yang jelas (mis. header: 'Ajukan Layanan' sebagai navigasi; hero: 'Mulai Pengajuan Layanan' dengan mikroCopy penjelasan). Pastikan keduanya mengarah ke destinasi yang konsisten.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-04",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Aesthetic and Minimalist Design (Nielsen H8)",
+        "Issue_Title": "Kompetisi hierarki visual antara 'Masuk' dan 'Ajukan Layanan' sebagai primary action",
+        "Description": "Pada portal berbasis akun, pengguna umumnya harus terautentikasi sebelum dapat mengajukan layanan. Bila 'Ajukan Layanan' tampil lebih dominan daripada 'Masuk', pengguna akan menempuh jalur yang berujung pada redirect ke login — menciptakan broken expectation dan langkah tambahan yang tidak terduga. Tidak ada penanda status ('Anda belum masuk') pada halaman.",
+        "Recommendation": "Tetapkan hierarki eksplisit: satu CTA primer (mis. 'Masuk' atau 'Daftar') dan satu CTA sekunder bergaya outline untuk 'Ajukan Layanan'. Tambahkan indikator status sesi pada header ('Belum masuk') agar pengguna memahami posisinya.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-05",
+        "Type": "UX",
+        "Severity": 3,
+        "Heuristic_Type": "Recognition Rather Than Recall (Nielsen H6) / Navigable (WCAG 2.4)",
+        "Issue_Title": "Tidak tersedia kolom pencarian maupun filter pada katalog layanan",
+        "Description": "Hasil crawl menunjukkan tidak ada satu pun elemen input pada landing page, sementara halaman menampilkan katalog produk/layanan dengan kontrol 'Tampilkan lebih banyak produk'. Pengguna yang mencari layanan spesifik harus memindai seluruh daftar secara manual dan berulang kali menekan 'tampilkan lebih banyak'. Beban kognitif dan waktu pencarian meningkat linear terhadap pertumbuhan katalog.",
+        "Recommendation": "Tambahkan search bar menonjol di atas katalog dengan placeholder spesifik (mis. 'Cari layanan, mis. perizinan usaha'), disertai filter kategori dan empty-state yang informatif ('Tidak ada layanan untuk kata kunci X — coba kata kunci lain').",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-06",
+        "Type": "UX",
+        "Severity": 3,
+        "Heuristic_Type": "Help and Documentation (Nielsen H10) / Match Between System and the Real World (H2)",
+        "Issue_Title": "Tidak ada jalur pendaftaran akun (sign-up) maupun penjelasan cara memperoleh akun",
+        "Description": "Daftar tombol yang terdeteksi (Masuk, Ajukan Layanan, Tampilkan lebih banyak produk, Lihat semua artikel dan video) tidak memuat CTA 'Daftar' atau 'Registrasi'. Bila akun DigitalPass diperoleh melalui mekanisme lain (undangan instansi, aktivasi di kantor layanan), mekanisme tersebut sama sekali tidak dikomunikasikan di landing. Pengguna baru yang belum memiliki akun mengalami dead-end: mereka tidak dapat melanjutkan pengajuan layanan dan tidak tahu langkah berikutnya.",
+        "Recommendation": "Tambahkan CTA 'Daftar' di samping 'Masuk'. Bila registrasi bersifat tertutup/terundang, tampilkan penjelasan singkat + tautan 'Cara mendapatkan akun' yang mengarah ke halaman panduan langkah-demi-langkah beserta kontak bantuan.",
+        "User_Story_Context": "Login"
+      },
+      {
+        "ID": "HE-07",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Match Between System and the Real World (Nielsen H2)",
+        "Issue_Title": "Metode autentikasi (email/HP/NIK/SSO) tidak dikomunikasikan sebelum pengguna mengklik 'Masuk'",
+        "Description": "Label tombol hanya 'Masuk' tanpa indikasi kredensial apa yang digunakan. Pengguna tidak dapat mempersiapkan email, nomor HP, NIK, atau akun SSO instansi sebelum masuk ke halaman login, sehingga sering terjadi percobaan berulang dengan kredensial yang salah.",
+        "Recommendation": "Tambahkan mikroCopy pendukung di dekat CTA, mis. 'Masuk dengan akun instansi atau nomor HP terdaftar', atau sediakan multi-entry login (SSO instansi / email / OTP) yang diberi label jelas sejak halaman landing.",
+        "User_Story_Context": "Login"
+      },
+      {
+        "ID": "HE-08",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Help and Documentation (Nielsen H10) / User Control and Freedom (H3)",
+        "Issue_Title": "Tidak ada akses 'Lupa Password' atau kontak bantuan pada titik masuk",
+        "Description": "Pada landing page tidak ditemukan tautan 'Lupa Password', 'Bantuan', 'FAQ', maupun 'Hubungi Kami'. Kegagalan kredensial adalah titik drop-off paling umum pada portal layanan; tanpa jalur pemulihan yang terlihat, pengguna yang lupa password tidak memiliki emergency exit dan harus meninggalkan situs untuk mencari kanal bantuan.",
+        "Recommendation": "Tampilkan tautan 'Lupa password?' di dekat tombol Masuk pada halaman login, dan sediakan akses 'Bantuan' yang persisten (header atau footer) dengan FAQ autentikasi serta kanal kontak (email/WhatsApp/call center).",
+        "User_Story_Context": "Login / Lupa Password"
+      },
+      {
+        "ID": "HE-09",
+        "Type": "Functional",
+        "Severity": 2,
+        "Heuristic_Type": "Understandable - Predictable (WCAG 3.2) / Transparansi Privasi (UU PDP 27/2022)",
+        "Issue_Title": "GA4 mengirim data page_view tanpa consent notice yang terlihat",
+        "Description": "Request POST https://analytics.google.com/g/collect?...tid=G-HRCRBT928Y...&en=page_view terkirim segera saat halaman dimuat, tanpa indikasi banner atau notice privasi pada halaman yang dipindai. Selain risiko kepatuhan terhadap UU PDP, request tersebut berstatus ERR_ABORTED sehingga sebagian data analitik hilang dan keputusan produk menjadi bias.",
+        "Recommendation": "Terapkan mekanisme consent (banner ringan dengan opsi terima/tolak) sebelum memuat GA4, dan gunakan Consent Mode v2. Sertakan tautan Kebijakan Privasi yang mudah ditemukan di footer.",
+        "User_Story_Context": "Global"
+      },
+      {
+        "ID": "HE-10",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Visibility of System Status (Nielsen H1)",
+        "Issue_Title": "Tidak ada skeleton atau loading state untuk konten yang bergantung pada aset eksternal",
+        "Description": "Konten kegiatan dan produk bergantung pada aset dari OSS eksternal (region ap-southeast-5). Tidak ditemukan indikator loading, skeleton, atau placeholder saat konten belum siap, sehingga pada koneksi lambat area konten tampak kosong dan pengguna tidak dapat membedakan antara 'sedang memuat' dan 'tidak ada konten'.",
+        "Recommendation": "Tambahkan skeleton screen berproporsi sama dengan kartu konten dan loading state eksplisit untuk setiap fetch data. Gunakan lazy-loading gambar dengan placeholder blur dominan warna brand.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-11",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Visibility of System Status (H1) / Operable (WCAG 4.1.2 Name, Role, Value)",
+        "Issue_Title": "Kontrol 'Tampilkan lebih banyak produk' tanpa state, jumlah tersisa, atau atribut aksesibilitas",
+        "Description": "Tombol 'Tampilkan lebih banyak produk' tidak mengomunikasikan berapa item yang tersisa, tidak menampilkan feedback saat proses fetch berlangsung, dan berisiko tidak memiliki atribut aria-expanded/aria-controls. Pengguna tidak dapat memastikan apakah kliknya berhasil diproses.",
+        "Recommendation": "Tampilkan jumlah tersisa pada label (mis. 'Tampilkan 12 layanan lainnya'), ubah label menjadi 'Memuat…' dengan spinner saat fetch, sembunyikan tombol ketika data habis, dan tambahkan aria-expanded serta aria-controls ke elemen target.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-12",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "User Control and Freedom (H3) / Shneiderman #4 Design Dialogs to Yield Closure",
+        "Issue_Title": "Tidak ada mekanisme return-to-context setelah pengguna menyelesaikan login",
+        "Description": "CTA 'Masuk' tidak membawa parameter redirect/next yang dapat mempertahankan niat awal pengguna. Jika pengguna mengklik 'Ajukan Layanan' lalu diarahkan ke login, setelah autentikasi mereka berisiko terlempar ke dashboard generik dan harus mengulang navigasi dari awal, kehilangan konteks dan menimbulkan frustrasi.",
+        "Recommendation": "Implementasikan parameter return URL (mis. /login?next=/layanan/xyz) dan arahkan pengguna kembali ke halaman yang mereka tuju setelah autentikasi berhasil, disertai snackbar konfirmasi 'Anda berhasil masuk.'",
+        "User_Story_Context": "Login"
+      },
+      {
+        "ID": "HE-13",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Visibility of System Status (H1) / Match Between System and the Real World (H2)",
+        "Issue_Title": "Indikasi konten kegiatan kedaluwarsa dan tidak adanya tanggal publikasi",
+        "Description": "Satu-satunya aset kegiatan yang teridentifikasi memiliki nama file kegiatan-20240715102645.png, mengindikasikan konten berasal dari 15 Juli 2024. Selain itu tidak ditemukan metadata tanggal publikasi pada kartu artikel/kegiatan, sehingga pengguna tidak dapat menilai kesegaran dan relevansi informasi pada portal layanan publik yang seharusnya aktif diperbarui.",
+        "Recommendation": "Tampilkan tanggal publikasi dan label kategori pada setiap kartu konten, serta terapkan mekanisme editorial untuk menyorot konten terbaru. Arsipkan konten lama atau tandai sebagai 'Arsip' agar tidak menyesatkan.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-14",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Operable - Navigable (WCAG 2.4.1 Bypass Blocks) / Shneiderman #8 Reduce Short-Term Memory Load",
+        "Issue_Title": "Tidak ada skip-link maupun landmark navigasi pada halaman dengan struktur konten panjang",
+        "Description": "Halaman landing memiliki header, hero, katalog produk, section artikel, dan section video. Tanpa skip-link ('Lewati ke konten utama') dan landmark (main/nav/section berlabel), pengguna keyboard dan screen reader harus menekan Tab berulang kali melalui seluruh item navigasi sebelum mencapai konten utama.",
+        "Recommendation": "Tambahkan skip-link sebagai elemen fokus pertama, gunakan elemen semantik <header>, <nav aria-label>, <main>, dan beri setiap region aria-labelledby yang deskriptif. Verifikasi urutan Tab mengikuti urutan visual.",
+        "User_Story_Context": "Global"
+      },
+      {
+        "ID": "HE-15",
+        "Type": "UX",
+        "Severity": 3,
+        "Heuristic_Type": "Help Users Recognize, Diagnose, and Recover from Errors (Nielsen H9)",
+        "Issue_Title": "Tidak ada mekanisme penanganan dan pelaporan kegagalan resource secara global",
+        "Description": "Ketika aset gambar gagal dimuat (ERR_BLOCKED_BY_ORB), sistem tidak menampilkan pesan, tidak menyediakan tombol 'Coba lagi', dan tidak mencatat kegagalan ke monitoring yang terlihat. Pengguna dibiarkan menebak apakah harus menunggu, me-refresh, atau konten memang tidak tersedia — kegagalan senyap yang menurunkan kepercayaan pada portal layanan publik.",
+        "Recommendation": "Bangun error boundary pada level komponen: tampilkan state error ringkas dengan pesan bahasa manusia ('Sebagian konten gagal dimuat') dan tombol 'Muat ulang bagian ini'. Kirim event kegagalan aset ke layanan monitoring (Sentry/CloudWatch) beserta URL dan status.",
+        "User_Story_Context": "Eksplorasi landing page sebelum login"
+      },
+      {
+        "ID": "HE-16",
+        "Type": "UX",
+        "Severity": 2,
+        "Heuristic_Type": "Error Prevention (Nielsen H5) / Input Assistance (WCAG 3.3)",
+        "Issue_Title": "Perlu verifikasi: atribut autocomplete, show/hide password, dan pesan error inline pada form login",
+        "Description": "Halaman /login tidak tercakup dalam crawl (ringkasan input kosong menunjukkan tidak ada field form pada halaman yang dipindai), sehingga kualitas form tidak dapat dipastikan. Risiko umum pada portal sejenis: tidak ada tombol tampilkan password, tidak ada autocomplete='username'/'current-password' sehingga password manager gagal, dan pesan error bersifat generik di atas form alih-alih inline per-field.",
+        "Recommendation": "Verifikasi dan pastikan: (1) ikon mata untuk show/hide password; (2) atribut autocomplete yang benar pada field email/HP dan password; (3) pesan error inline spesifik di bawah field yang bermasalah; (4) atribut aria-invalid dan aria-describedby; (5) CAPTCHA/rate-limit yang dijelaskan dengan bahasa manusia.",
+        "User_Story_Context": "Login"
+      },
+      {
+        "ID": "HE-17",
+        "Type": "UX",
+        "Severity": 3,
+        "Heuristic_Type": "Visibility of System Status (H1) / Help Users Recover from Errors (H9) / Help and Documentation (H10)",
+        "Issue_Title": "Alur lupa password berisiko tanpa konfirmasi pengiriman, hitung mundur resend, dan jalur eskalasi",
+        "Description": "Halaman /forgot-password tidak tercakup dalam crawl sehingga tidak dapat diverifikasi secara langsung. Namun karena tidak ditemukan tautan 'Lupa Password' pada titik masuk, alur ini kemungkinan sulit ditemukan; dan pola umum portal serupa menunjukkan absennya konfirmasi pengiriman OTP/tautan, tidak adanya hitung mundur dan tombol 'Kirim ulang', tidak adanya ekspektasi masa berlaku tautan, serta tidak adanya jalur eskalasi ketika email/HP pengguna sudah tidak aktif.",
+        "Recommendation": "Implementasikan: (1) pesan konfirmasi netral 'Jika email terdaftar, kami telah mengirim tautan reset ke ***@domain.com'; (2) masa berlaku tautan yang dinyatakan eksplisit (mis. 15 menit) dan tombol kirim ulang dengan countdown 60 detik; (3) pesan netral untuk mencegah enumerasi akun; (4) opsi eskalasi 'Email/HP tidak aktif? Hubungi Support' dengan tautan kontak langsung.",
+        "User_Story_Context": "Lupa Password"
+      }
+    ]
+  },
+  {
     "id": "RPT-WC-001",
     "website": "https://weebcentral.com/",
     "createdAt": "2026-08-21T13:00:00.000Z",
