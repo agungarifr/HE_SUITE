@@ -1,0 +1,7 @@
+node_modules
+.git
+.env
+.env.*
+*.log
+crawler_screenshot.png
+crawler_report.json
