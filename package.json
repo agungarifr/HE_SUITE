@@ -9,7 +9,8 @@
     "dev": "concurrently \"vite\" \"node api.js\"",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node api.js"
   },
   "dependencies": {
     "commander": "^15.0.0",
