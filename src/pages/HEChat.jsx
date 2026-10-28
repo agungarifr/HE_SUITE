@@ -10,6 +10,15 @@ export default function HEChat() {
   const [activeReport, setActiveReport] = useState(null);
   const [reportsList, setReportsList] = useState([]);
 
+  // Browser Extension & Session Bridge State
+  const [extensionInstalled, setExtensionInstalled] = useState(false);
+  const [browserTabs, setBrowserTabs] = useState([]);
+  const [selectedTabId, setSelectedTabId] = useState('');
+  const [selectedTabInfo, setSelectedTabInfo] = useState(null);
+  const [sessionCookies, setSessionCookies] = useState([]);
+  const [detectingTabs, setDetectingTabs] = useState(false);
+  const [showExtensionHelp, setShowExtensionHelp] = useState(false);
+
   const statusEndRef = useRef(null);
 
   const fetchReports = async (selectLatest = false) => {
@@ -28,27 +37,93 @@ export default function HEChat() {
   };
 
   useEffect(() => {
-    // Initial fetch, load reports list
     fetchReports(false);
+
+    // Listen for messages from the Chrome Extension content script
+    const handleMessage = (event) => {
+      if (event.source !== window || !event.data || event.data.source !== 'HE_SUITE_EXT') {
+        return;
+      }
+      const { action, tabs, cookies } = event.data;
+      if (action === 'EXTENSION_PONG') {
+        setExtensionInstalled(true);
+      } else if (action === 'TABS_RESPONSE') {
+        setBrowserTabs(tabs || []);
+        setDetectingTabs(false);
+      } else if (action === 'COOKIES_RESPONSE') {
+        setSessionCookies(cookies || []);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Check if extension attribute exists on <html>
+    if (document.documentElement.getAttribute('data-he-suite-extension') === 'true') {
+      setExtensionInstalled(true);
+    } else {
+      window.postMessage({ source: 'HE_SUITE_PAGE', action: 'CHECK_EXTENSION' }, '*');
+    }
+
+    // Custom event listener from extension
+    const handleExtReady = () => setExtensionInstalled(true);
+    window.addEventListener('he-suite-extension-ready', handleExtReady);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('he-suite-extension-ready', handleExtReady);
+    };
   }, []);
 
   useEffect(() => {
     statusEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [statusLog, aiStream]);
 
+  const handleDetectTabs = () => {
+    setDetectingTabs(true);
+    window.postMessage({ source: 'HE_SUITE_PAGE', action: 'GET_TABS' }, '*');
+    setTimeout(() => {
+      setDetectingTabs(false);
+    }, 2500);
+  };
+
+  const handleSelectTab = (tabId) => {
+    setSelectedTabId(tabId);
+    if (!tabId) {
+      setSelectedTabInfo(null);
+      setSessionCookies([]);
+      return;
+    }
+    const tab = browserTabs.find(t => String(t.id) === String(tabId));
+    if (tab) {
+      setSelectedTabInfo(tab);
+      // Auto-fill prompt if empty
+      if (!prompt.trim()) {
+        setPrompt(`lakukan he untuk website ${tab.url}, dengan case: login form, navigasi akun, riwayat transaksi`);
+      }
+      // Request cookies for this tab's URL
+      window.postMessage({ source: 'HE_SUITE_PAGE', action: 'GET_COOKIES', payload: { url: tab.url } }, '*');
+    }
+  };
+
   const handleStartEvaluation = async (e) => {
     e?.preventDefault();
     if (!prompt.trim() || evaluating) return;
 
     setEvaluating(true);
-    setStatusLog(['[Sistem] Menginisialisasi proses evaluasi heuristik...']);
+    const startMsg = sessionCookies.length > 0
+      ? `[Sistem] Menginisialisasi evaluasi heuristik dengan ${sessionCookies.length} session cookies terinjeksi...`
+      : '[Sistem] Menginisialisasi proses evaluasi heuristik...';
+    setStatusLog([startMsg]);
     setAiStream('');
 
     try {
       const response = await fetch('/api/he/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: prompt.trim() })
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          cookies: sessionCookies
+        })
       });
 
       if (!response.ok) {
@@ -128,14 +203,14 @@ export default function HEChat() {
 
       {/* Grid: Chat Box & Log Chat AI (Ukuran & Proporsi Seimbang) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(460px, 1fr))', gap: 20 }}>
-        {/* BOX 1: CHAT BOX (TEBAL & LEGA) */}
+        {/* BOX 1: CHAT BOX (TEBAL & LEGA DENGAN SESI BRIDGE) */}
         <div
           className="nes-container is-dark with-title"
           style={{
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
-            minHeight: 280,
+            minHeight: 330,
             padding: '16px 18px'
           }}
         >
@@ -143,17 +218,126 @@ export default function HEChat() {
             CHAT BOX: INPUT PERINTAH EVALUASI
           </p>
 
-          <form onSubmit={handleStartEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+          <form onSubmit={handleStartEvaluation} style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+            {/* Auto-detect Tab Session Bar (Anti-Bot / Login Bridge) */}
+            <div style={{
+              background: '#15181c',
+              border: '2px solid #000',
+              padding: '10px 12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 8, color: 'var(--nes-warning)' }} className="nes-font">
+                    SESI BROWSER (LOGIN BYPASS):
+                  </span>
+                  {extensionInstalled ? (
+                    <span className="nes-badge" style={{ verticalAlign: 'middle' }}>
+                      <span className="is-success" style={{ fontSize: 7 }}>BRIDGE SIAP</span>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowExtensionHelp(!showExtensionHelp)}
+                      className="nes-btn"
+                      style={{ fontSize: 7, padding: '2px 6px', color: '#38bdf8' }}
+                    >
+                      {showExtensionHelp ? 'TUTUP PANDUAN' : 'PASANG EXTENSION'}
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="nes-btn is-primary"
+                  onClick={handleDetectTabs}
+                  disabled={detectingTabs}
+                  style={{ fontSize: 8, padding: '4px 8px', whiteSpace: 'nowrap' }}
+                >
+                  {detectingTabs ? 'MEMINDAI...' : '🔍 DETEKSI TAB BROWSER'}
+                </button>
+              </div>
+
+              {/* Extension Help Guide Box */}
+              {showExtensionHelp && (
+                <div style={{
+                  background: '#0f172a',
+                  border: '1px solid var(--nes-primary)',
+                  padding: 10,
+                  fontSize: 11,
+                  color: '#cbd5e1',
+                  lineHeight: 1.5,
+                  fontFamily: 'Inter, sans-serif'
+                }}>
+                  <strong style={{ color: 'var(--nes-warning)' }}>Panduan 15 Detik Pasang Extension Bridge:</strong>
+                  <ol style={{ margin: '6px 0 0 16px', padding: 0 }}>
+                    <li>Buka <code>chrome://extensions</code> di browser dan aktifkan <strong>Developer mode</strong> (kanan atas).</li>
+                    <li>Klik tombol <strong>Load unpacked</strong> (kiri atas).</li>
+                    <li>Pilih folder: <code>hesuite/extension</code> di repository ini.</li>
+                    <li>Refresh tab ini, lalu klik tombol <strong>DETEKSI TAB BROWSER</strong>!</li>
+                  </ol>
+                </div>
+              )}
+
+              {/* Dropdown Tab Picker */}
+              {browserTabs.length > 0 && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div className="nes-select is-dark" style={{ flex: 1 }}>
+                    <select
+                      value={selectedTabId}
+                      onChange={(e) => handleSelectTab(e.target.value)}
+                      style={{ fontSize: 11, fontFamily: 'Inter, sans-serif' }}
+                    >
+                      <option value="">-- Pilih Tab Browser yang Sudah Login --</option>
+                      {browserTabs.map(t => {
+                        let host = '';
+                        try { host = new URL(t.url).hostname; } catch {}
+                        return (
+                          <option key={t.id} value={t.id}>
+                            {t.title.slice(0, 42)} {host ? `(${host})` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  {sessionCookies.length > 0 && (
+                    <button
+                      type="button"
+                      className="nes-btn is-error"
+                      onClick={() => handleSelectTab('')}
+                      style={{ fontSize: 8, padding: '4px 8px' }}
+                      title="Reset Sesi"
+                    >
+                      RESET
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Active Session Info Badge */}
+              {selectedTabInfo && sessionCookies.length > 0 && (
+                <div style={{ fontSize: 11, color: 'var(--nes-success)', fontFamily: 'Inter, sans-serif', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>✓ Sesi Terhubung:</span>
+                  <strong style={{ color: '#fff' }}>{selectedTabInfo.title.slice(0, 32)}</strong>
+                  <span>({sessionCookies.length} cookies otomatis diinjeksi)</span>
+                </div>
+              )}
+            </div>
+
+            {/* Prompt Textarea */}
             <textarea
               className="nes-textarea is-dark"
-              rows={5}
+              rows={4}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               disabled={evaluating}
               placeholder="Contoh: lakukan he untuk website https://tokopedia.com, dengan case: login, lupa password, pencarian produk, checkout..."
               style={{
                 flex: 1,
-                minHeight: 130,
+                minHeight: 110,
                 fontSize: 13,
                 fontFamily: 'Inter, sans-serif',
                 lineHeight: 1.5,
@@ -197,7 +381,7 @@ export default function HEChat() {
           style={{
             display: 'flex',
             flexDirection: 'column',
-            minHeight: 280,
+            minHeight: 330,
             padding: '16px 18px'
           }}
         >
@@ -212,7 +396,7 @@ export default function HEChat() {
               border: '2px solid #000',
               padding: '12px 14px',
               overflowY: 'auto',
-              maxHeight: 210,
+              maxHeight: 250,
               fontFamily: "'Courier New', Courier, monospace",
               fontSize: 12,
               lineHeight: 1.6
@@ -224,6 +408,7 @@ export default function HEChat() {
                   [AI AGENT STANDBY]
                 </div>
                 <div>• Crawler Puppeteer siap menelusuri DOM & mendeteksi error console.</div>
+                <div>• Session Bridge siap menginjeksi sesi login dari tab browser.</div>
                 <div>• Memori Second Brain siap diinjeksi sebagai standar heuristik.</div>
                 <div style={{ marginTop: 8, color: '#94a3b8' }}>
                   Ketik URL & use case pada chat box di sebelah, lalu klik <strong>MULAI HE</strong>.
@@ -303,7 +488,7 @@ export default function HEChat() {
             )}
           </div>
 
-          {/* Export Buttons (Muncul jika ada laporan yang dipilih) */}
+          {/* Export Buttons */}
           {activeReport && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button

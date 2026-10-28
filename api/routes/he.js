@@ -93,7 +93,7 @@ router.get('/reports/:id/export/excel', async (req, res) => {
 
 // Run Heuristic Evaluation with SSE Stream
 router.post('/run', async (req, res) => {
-  const { prompt } = req.body;
+  const { prompt, cookies } = req.body;
 
   if (!prompt || typeof prompt !== 'string') {
     return res.status(400).json({ error: 'Prompt evaluasi tidak boleh kosong.' });
@@ -120,6 +120,7 @@ router.post('/run', async (req, res) => {
       sendEvent('status', 'Menjalankan automated web crawler & screenshot capture...');
       crawlerData = await runCrawler({
         url,
+        cookies: Array.isArray(cookies) ? cookies : [],
         onProgress: (msg) => sendEvent('status', msg)
       });
     }

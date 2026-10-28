@@ -7,41 +7,50 @@
 
 ```mermaid
 graph TD
+    subgraph BROWSER_EXT["Chrome Extension Bridge (extension/)"]
+        EXT_BG["background.js\n(tabs & cookies API)"]
+        EXT_CS["content.js\n(DOM bridge & postMessage)"]
+    end
+
     subgraph CLIENT["Frontend Client (React SPA — NES.css)"]
         SIDEBAR["Sidebar.jsx\n(3 Menus, Status AI Agent)"]
-        HE_CHAT["HEChat.jsx\n(Prompt, SSE Stream, Structured Table, Excel Export)"]
-        KB_PAGE["KnowledgeBase.jsx\n(Multi-format Upload, In-App Text Preview)"]
-        CFG_PAGE["ModelConfig.jsx\n(API Key, Presets, Live Test)"]
+        HE_CHAT["HEChat.jsx\n(Prompt, Tab Session Bridge, SSE Stream, Table, Excel Export)"]
+        BRAIN_PAGE["SecondBrain.jsx\n(UX Rules, Tags, Toggle Active, Vault Docs)"]
+        CFG_PAGE["ModelConfig.jsx\n(API Key, Presets: DeepSeek/Gemini/OpenAI, Live Test)"]
     end
 
     subgraph SERVER["Backend API (Express :8888)"]
-        ROUTER_HE["api/routes/he.js\nPOST /run, GET /reports, GET /export/excel"]
-        ROUTER_KB["api/routes/kb.js\nGET /files, POST /upload, GET /preview"]
+        ROUTER_HE["api/routes/he.js\nPOST /run (with cookies), GET /reports, GET /export/excel"]
+        ROUTER_BRAIN["api/routes/brain.js\nCRUD /notes, /vault, /stats"]
         ROUTER_CFG["api/routes/config.js\nGET /config, POST /config, POST /test"]
     end
 
     subgraph SERVICES["Domain Services"]
-        SVC_AI["api/services/ai.js\nOpenAI SDK, Prompt Parser, Stream Chunks"]
-        SVC_CRAWL["api/services/crawler.js\nPuppeteer Browser Automation"]
+        SVC_AI["api/services/ai.js\nOpenAI SDK, Domain Fallback, Stream Chunks"]
+        SVC_CRAWL["api/services/crawler.js\nStealth Puppeteer + Cookie Injector"]
+        SVC_BRAIN["api/services/brain.js\nSecond Brain Storage & Active Context Aggregator"]
         SVC_KB["api/services/kb-parser.js\nOfficeParser (PPT/PPTX/PDF/DOCX/TXT/MD)"]
-        SVC_CFG["api/services/config.js\n.env Reader/Writer"]
+        SVC_CFG["api/services/config.js\n.env Safe Reader/Writer"]
     end
 
     subgraph STORAGE["Persistent Storage"]
         ENV[".env (Keys & Config)"]
-        KB_DIR["public/knowledge_base/"]
+        BRAIN_DB["public/data/second_brain.json"]
+        KB_DIR["public/knowledge_base/ (Vault)"]
         REPORTS["public/data/reports.json"]
         STATIC["dist/ (Built Assets)"]
     end
 
+    BROWSER_EXT <-->|window.postMessage| HE_CHAT
     CLIENT -->|REST / SSE| SERVER
     ROUTER_HE --> SVC_AI
     ROUTER_HE --> SVC_CRAWL
-    ROUTER_HE --> SVC_KB
+    ROUTER_HE --> SVC_BRAIN
     ROUTER_HE --> REPORTS
 
-    ROUTER_KB --> SVC_KB
-    ROUTER_KB --> KB_DIR
+    ROUTER_BRAIN --> SVC_BRAIN
+    SVC_BRAIN --> BRAIN_DB
+    SVC_BRAIN --> KB_DIR
 
     ROUTER_CFG --> SVC_CFG
     ROUTER_CFG --> SVC_AI

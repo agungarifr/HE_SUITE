@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "HE Suite — Tab Session Bridge",
+  "version": "1.0.0",
+  "description": "Jembatan otomatisasi sesi tab & cookies untuk evaluasi HE Suite tanpa copy-paste manual.",
+  "permissions": [
+    "tabs",
+    "cookies"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "http://127.0.0.1/*",
+        "http://localhost:*/*",
+        "http://127.0.0.1:*/*",
+        "https://*.onrender.com/*",
+        "https://*.hf.space/*",
+        "https://*.loca.lt/*",
+        "https://*.trycloudflare.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

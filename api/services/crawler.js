@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import fs from 'fs/promises';
 import path from 'path';
 
-export async function runCrawler({ url, onProgress = () => {} }) {
+export async function runCrawler({ url, cookies = [], onProgress = () => {} }) {
   let targetUrl = url.trim();
   if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
     targetUrl = `https://${targetUrl}`;
@@ -63,6 +63,38 @@ export async function runCrawler({ url, onProgress = () => {} }) {
       const fail = req.failure();
       if (fail) functionalData.networkErrors.push(`${req.method()} ${req.url()} - ${fail.errorText}`);
     });
+
+    // Inject session cookies if provided (from Chrome Extension / Auth Bridge)
+    if (Array.isArray(cookies) && cookies.length > 0) {
+      onProgress(`[Crawler] Menginjeksi ${cookies.length} session cookies untuk otentikasi...`);
+      try {
+        const sanitized = cookies
+          .filter(c => c && c.name && c.value)
+          .map(c => {
+            const clean = {
+              name: String(c.name),
+              value: String(c.value),
+              path: c.path || '/'
+            };
+            if (c.domain) {
+              clean.domain = c.domain.startsWith('.') ? c.domain.slice(1) : c.domain;
+            } else {
+              clean.url = targetUrl;
+            }
+            if (c.httpOnly !== undefined) clean.httpOnly = Boolean(c.httpOnly);
+            if (c.secure !== undefined) clean.secure = Boolean(c.secure);
+            if (['Strict', 'Lax', 'None'].includes(c.sameSite)) clean.sameSite = c.sameSite;
+            return clean;
+          });
+
+        if (sanitized.length > 0) {
+          await page.setCookie(...sanitized);
+          onProgress(`[Crawler] Berhasil menginjeksi ${sanitized.length} cookies sesi!`);
+        }
+      } catch (ckErr) {
+        onProgress(`[Crawler Warning] Sebagian cookies gagal diinjeksi (${ckErr.message}), lanjut navigasi...`);
+      }
+    }
 
     onProgress(`[Crawler] Mengunjungi halaman web (stealth mode)...`);
     

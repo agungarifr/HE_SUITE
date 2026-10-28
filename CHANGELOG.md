@@ -6,6 +6,19 @@
 ## [Unreleased] — branch `mini`
 > Target version: `2.0.0`
 
+### [2026-10-28T10:20:00+07:00] Tab Session Bridge: Zero Copy-Paste Auth & Captcha/Login Bypass
+- [EXT] **Chrome Extension Companion (`extension/`)**:
+  - Dibuat extension Manifest V3 resmi untuk menjembatani izin browser pengguna ke tab HE Suite.
+  - Background service worker & content script mengizinkan deteksi daftar tab terbuka (`chrome.tabs.query`) dan ekstraksi cookies terotentikasi (`chrome.cookies.getAll`) tanpa pernah membocorkan data ke pihak ketiga.
+- [FE] **Auto-Detect Tab Dropdown di `HEChat.jsx`**:
+  - Panel "SESI BROWSER (LOGIN BYPASS)" langsung di atas prompt chat box.
+  - Tombol **`[ 🔍 DETEKSI TAB BROWSER ]`** memunculkan dropdown seluruh tab aktif di browser pengguna.
+  - Memilih tab (misal Tokopedia / Shopee yang sudah login) otomatis menyerap seluruh cookies sesi ke state aplikasi dan mengisi URL target.
+- [BE] **Cookie Injection di `api/services/crawler.js` & `api/routes/he.js`**:
+  - Endpoint `/api/he/run` menerima payload array `cookies`.
+  - Crawler Puppeteer secara otomatis mensanitasi dan menyuntikkan cookies via `page.setCookie(...)` sebelum navigasi, melompati halaman login/captcha secara instan.
+
+
 ### [2026-10-27T15:55:00+07:00] Anti-Bot Stealth Crawler & Resilient Heuristic Fallback
 - [BE/CRAWLER] **Stealth Fingerprint Masking**:
   - Menyamarkan headless Chrome dengan User-Agent Chrome 133 modern asli dan header bahasa/arsitektur Windows standar.
